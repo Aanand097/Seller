@@ -7,6 +7,16 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const schema = z.object({
+  full_name: z.string().trim().min(2, "Name too short").max(80),
+  email: z.string().trim().email("Invalid email").max(255),
+  password: z.string().min(6, "Password must be at least 6 characters").max(72),
+  phone: z.string().trim().max(30).optional().or(z.literal("")),
+  age: z.string().optional().or(z.literal("")),
+  address: z.string().trim().max(255).optional().or(z.literal("")),
+});
 
 export const Route = createFileRoute("/register")({
   head: () => ({ meta: [{ title: "Create account — NexusAI" }] }),
@@ -22,8 +32,10 @@ function Register() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parsed = schema.safeParse(f);
+    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setBusy(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: f.email,
       password: f.password,
       options: {
@@ -33,8 +45,13 @@ function Register() {
     });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success("Check your email to verify your account!");
-    nav({ to: "/login" });
+    if (data.session) {
+      toast.success("Account created! Welcome aboard.");
+      nav({ to: "/dashboard" });
+    } else {
+      toast.success("Check your email to verify your account!");
+      nav({ to: "/login" });
+    }
   };
 
   return (
