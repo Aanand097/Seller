@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PublicLayout } from "@/components/site/PublicLayout";
 import { Button } from "@/components/ui/button";
@@ -7,29 +7,35 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
+import { z } from "zod";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in — NexusAI" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({ redirect: typeof s.redirect === "string" ? s.redirect : undefined }),
   component: Login,
 });
 
 function Login() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const nav = useNavigate();
+  const search = useSearch({ from: "/login" });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => { if (user) nav({ to: "/dashboard" }); }, [user, nav]);
+  useEffect(() => {
+    if (user) nav({ to: (search.redirect as any) ?? (isAdmin ? "/admin" : "/dashboard") });
+  }, [user, isAdmin, nav, search.redirect]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parsed = z.object({ email: z.string().email(), password: z.string().min(6) }).safeParse({ email, password });
+    if (!parsed.success) return toast.error("Enter a valid email and password (min 6 chars)");
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Welcome back!");
-    nav({ to: "/dashboard" });
   };
 
   const forgot = async () => {
