@@ -1,16 +1,13 @@
 @import "tailwindcss" source(none);
 @source "../src";
-@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 /*
  * AI Marketplace — Soft Sky Premium design system.
  * Brand: clean whites, deep navy ink, vibrant sky-blue primary.
- * Typography: Sora (display) + Manrope (body), loaded from Google Fonts.
+ * Typography: Sora (display) + Manrope (body), loaded via <link> in __root.
  */
-@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap");
-
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -207,5 +204,4 @@
   background: linear-gradient(90deg, oklch(0.95 0.02 247) 25%, oklch(0.97 0.018 247) 50%, oklch(0.95 0.02 247) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.6s infinite;
-  }
 }
