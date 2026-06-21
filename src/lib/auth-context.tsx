@@ -71,6 +71,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     signOut: async () => {
       await supabase.auth.signOut();
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setIsAdmin(false);
+      if (typeof window !== "undefined") window.location.href = "/";
     },
     refreshProfile: async () => {
       if (user) await loadProfile(user.id);
