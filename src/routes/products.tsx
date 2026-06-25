@@ -1,29 +1,48 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { PublicLayout } from "@/components/site/PublicLayout";
 import { ProductCard, type ProductRow } from "@/components/site/ProductCard";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 
+const productsQuery = queryOptions({
+  queryKey: ["products", "active"],
+  queryFn: async () => {
+    const { data } = await supabase.from("products").select("*, categories(name)").eq("status", "active");
+    return (data as ProductRow[]) ?? [];
+  },
+  staleTime: 5 * 60_000,
+  gcTime: 30 * 60_000,
+});
+
+const categoriesQuery = queryOptions({
+  queryKey: ["categories"],
+  queryFn: async () => {
+    const { data } = await supabase.from("categories").select("id,name");
+    return data ?? [];
+  },
+  staleTime: 30 * 60_000,
+  gcTime: 60 * 60_000,
+});
+
 export const Route = createFileRoute("/products")({
-  head: () => ({ meta: [{ title: "AI Products — NexusAI" }, { name: "description", content: "Browse premium AI subscriptions across every category." }] }),
+  head: () => ({ meta: [{ title: "Courses & AI Tools — NextGen E-Learning" }, { name: "description", content: "Browse premium courses and AI learning subscriptions across every category." }] }),
+  loader: ({ context }) => {
+    void context.queryClient.prefetchQuery(productsQuery);
+    void context.queryClient.prefetchQuery(categoriesQuery);
+  },
   component: ProductsPage,
 });
 
 function ProductsPage() {
-  const [products, setProducts] = useState<ProductRow[] | null>(null);
-  const [cats, setCats] = useState<{ id: string; name: string }[]>([]);
+  const { data: products } = useQuery(productsQuery);
+  const { data: cats = [] } = useQuery(categoriesQuery);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string | null>(null);
   const [sort, setSort] = useState<"new" | "low" | "high">("new");
-
-  useEffect(() => {
-    void supabase.from("products").select("*, categories(name)").eq("status", "active").then(({ data }) => setProducts((data as ProductRow[]) ?? []));
-    void supabase.from("categories").select("id,name").then(({ data }) => setCats(data ?? []));
-  }, []);
 
   const filtered = useMemo(() => {
     if (!products) return null;
@@ -40,8 +59,8 @@ function ProductsPage() {
     <PublicLayout>
       <section className="container mx-auto max-w-7xl px-4 py-12">
         <div className="text-center mb-10">
-          <h1 className="font-display text-4xl md:text-5xl font-bold">All AI products</h1>
-          <p className="text-muted-foreground mt-3">Premium subscriptions, verified instantly.</p>
+          <h1 className="font-display text-4xl md:text-5xl font-bold">All courses & tools</h1>
+          <p className="text-muted-foreground mt-3">Premium learning subscriptions, activated instantly.</p>
         </div>
         <div className="glass rounded-2xl p-4 flex flex-col md:flex-row gap-3 mb-8">
           <div className="relative flex-1">

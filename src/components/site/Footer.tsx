@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Github, Twitter, Linkedin, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import { Logo } from "./Logo";
 
 export function Footer() {
@@ -9,24 +9,22 @@ export function Footer() {
         <div className="md:col-span-2 space-y-4">
           <Logo />
           <p className="text-sm text-muted-foreground max-w-sm">
-            The premium marketplace for AI subscriptions. Discover, buy, and manage the world's best AI tools — all in one place.
+            NextGen E-Learning — the modern marketplace for premium learning subscriptions and AI-powered study tools. Learn faster, smarter, and together.
           </p>
           <div className="flex items-center gap-3">
-            {[Twitter, Github, Linkedin, Mail].map((Icon, i) => (
-              <a key={i} href="#" className="h-9 w-9 grid place-items-center rounded-lg border bg-white hover:bg-accent transition">
-                <Icon className="h-4 w-4" />
-              </a>
-            ))}
+            <a href="mailto:support@nextgen-elearning.com" className="h-9 w-9 grid place-items-center rounded-lg border bg-white hover:bg-accent transition" aria-label="Email support">
+              <Mail className="h-4 w-4" />
+            </a>
           </div>
         </div>
-        <FooterCol title="Marketplace" links={[["Products", "/products"], ["Categories", "/products"], ["About", "/about"], ["Contact", "/contact"]]} />
+        <FooterCol title="Explore" links={[["Courses", "/products"], ["Categories", "/products"], ["About", "/about"], ["Reviews", "/reviews"], ["Contact", "/contact"]]} />
         <FooterCol title="Support" links={[["FAQ", "/faq"], ["Contact us", "/contact"], ["Order tracking", "/dashboard/orders"], ["Help center", "/faq"]]} />
-        <FooterCol title="Legal" links={[["Privacy Policy", "/legal/privacy"], ["Terms", "/legal/terms"], ["Refund Policy", "/legal/refund"], ["Cookie Policy", "/legal/cookies"], ["Disclaimer", "/legal/disclaimer"]]} />
+        <FooterCol title="Legal" links={[["Privacy Policy", "/legal/privacy"], ["Terms", "/legal/terms"], ["Refund & Pricing", "/legal/refund"], ["Cookie Policy", "/legal/cookies"], ["Admin Policy", "/legal/admin"], ["Disclaimer", "/legal/disclaimer"]]} />
       </div>
       <div className="border-t">
         <div className="container mx-auto max-w-7xl px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} NexusAI Marketplace. All rights reserved.</p>
-          <p>Crafted with care for premium AI buyers.</p>
+          <p>© {new Date().getFullYear()} NextGen E-Learning. All rights reserved.</p>
+          <p>Built for ambitious learners.</p>
         </div>
       </div>
     </footer>

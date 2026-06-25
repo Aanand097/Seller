@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Trash2, ShoppingBag } from "lucide-react";
 import { PublicLayout } from "@/components/site/PublicLayout";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { formatPrice } from "@/lib/format";
 import { toast } from "sonner";
+import { placeOrder } from "@/lib/orders.functions";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({ meta: [{ title: "Cart — NexusAI" }] }),
@@ -17,6 +19,8 @@ function CartPage() {
   const { user, loading } = useAuth();
   const nav = useNavigate();
   const [items, setItems] = useState<any[] | null>(null);
+  const [placing, setPlacing] = useState(false);
+  const placeOrderFn = useServerFn(placeOrder);
 
   const load = async () => {
     if (!user) return setItems([]);
@@ -31,15 +35,17 @@ function CartPage() {
   };
 
   const checkout = async () => {
-    if (!user || !items?.length) return;
-    const total = items.reduce((s, i) => s + Number(i.products.price) * i.quantity, 0);
-    const { data: order, error } = await supabase.from("orders").insert({ user_id: user.id, total_price: total, payment_status: "paid", delivery_status: "delivered" }).select().single();
-    if (error || !order) return toast.error(error?.message ?? "Order failed");
-    await supabase.from("order_items").insert(items.map((i) => ({ order_id: order.id, product_id: i.product_id, price: i.products.price, quantity: i.quantity })));
-    await supabase.from("cart_items").delete().eq("user_id", user.id);
-    await supabase.from("notifications").insert({ user_id: user.id, title: "Order confirmed", message: `Your order #${order.id.slice(0,8)} has been placed successfully.` });
-    toast.success("Order placed!");
-    nav({ to: "/dashboard/orders" });
+    if (!user || !items?.length || placing) return;
+    setPlacing(true);
+    try {
+      await placeOrderFn();
+      toast.success("Order placed!");
+      nav({ to: "/dashboard/orders" });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Order failed");
+    } finally {
+      setPlacing(false);
+    }
   };
 
   if (!loading && !user) return <PublicLayout><div className="container mx-auto max-w-md px-4 py-20 text-center"><h1 className="text-2xl font-bold">Sign in to view your cart</h1><Button asChild className="mt-6"><Link to="/login">Sign in</Link></Button></div></PublicLayout>;
@@ -76,7 +82,7 @@ function CartPage() {
               <div className="flex justify-between mb-2"><span>Subtotal</span><span>{formatPrice(total)}</span></div>
               <div className="flex justify-between mb-4 text-sm text-muted-foreground"><span>Tax</span><span>Included</span></div>
               <div className="flex justify-between font-bold text-lg pt-4 border-t"><span>Total</span><span className="gradient-text">{formatPrice(total)}</span></div>
-              <Button onClick={checkout} size="lg" className="w-full mt-6 text-white" style={{ background: "var(--gradient-primary)" }}>Checkout</Button>
+              <Button onClick={checkout} disabled={placing} size="lg" className="w-full mt-6 text-white" style={{ background: "var(--gradient-primary)" }}>{placing ? "Placing order..." : "Checkout"}</Button>
             </div>
           </div>
         )}
