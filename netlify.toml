@@ -1,3 +1,4 @@
+# Netlify deployment for this TanStack Start (Nitro) project.
 [build]
   command = "NITRO_PRESET=netlify npm run build"
   publish = ".output/public"
