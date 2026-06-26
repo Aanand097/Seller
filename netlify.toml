@@ -1,5 +1,5 @@
 [build]
-  command = "NITRO_PRESET=netlify npm run build; echo '=== DIST ==='; ls -la dist/ 2>/dev/null || echo 'NO DIST'; ls -la dist/client/ 2>/dev/null || echo 'NO DIST/CLIENT'"
+  command = "NITRO_PRESET=netlify npm run build"
   publish = "dist"
 
 [build.environment]
