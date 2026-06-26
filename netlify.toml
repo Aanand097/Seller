@@ -1,30 +1,10 @@
-# Netlify deployment for this TanStack Start (Nitro) project.
-#
-# The project's default Nitro target is Cloudflare Workers (see vite.config.ts
-# via @lovable.dev/vite-tanstack-config). To deploy on Netlify we override the
-# Nitro preset to `netlify` at build time so Nitro emits Netlify Functions
-# (for SSR + server functions) plus the static client assets.
-#
-# Output layout produced by Nitro's `netlify` preset:
-#   .output/public  -> static assets (publish dir)
-#   .output/server  -> serverless function bundle (Netlify Functions)
-#
-# With this preset, Nitro generates its own _redirects inside .output/public
-# that routes unmatched paths to the SSR function, so SPA deep links and
-# refreshes work for every route (/login, /admin, /dashboard, /products/*,
-# etc.) without us hand-listing them.
-
 [build]
-  command = "npm run build"
+  command = "NITRO_PRESET=netlify npm run build"
   publish = ".output/public"
 
 [build.environment]
-  NITRO_PRESET = "netlify"
   NODE_VERSION = "20"
 
-# Safety net: if for any reason a request reaches Netlify's static layer
-# without matching a file or a Nitro-generated rule, fall back to index.html
-# so the SPA router can take over instead of showing Netlify's 404 page.
 [[redirects]]
   from = "/*"
   to = "/index.html"
