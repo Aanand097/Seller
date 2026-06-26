@@ -6,5 +6,17 @@ export default defineConfig({
   },
   nitro: {
     preset: process.env.NITRO_PRESET ?? "cloudflare",
+    rollupConfig: {
+      external: [
+        /^@tanstack\/react-router/,
+        /^@tanstack\/react-query/,
+        /^@tanstack\/react-start/,
+        /^@radix-ui\/.*/,
+        /^framer-motion/,
+        "sonner",
+        "react",
+        "react-dom",
+      ],
+    },
   },
 });
