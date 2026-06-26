@@ -1,12 +1,12 @@
-# Netlify deployment for this TanStack Start (Nitro) project.
 [build]
   command = "NITRO_PRESET=netlify npm run build"
-  publish = ".output/public"
+  publish = ".netlify/static"
 
 [build.environment]
   NODE_VERSION = "20"
 
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/.netlify/functions/server"
   status = 200
+  force = true
