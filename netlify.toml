@@ -1,5 +1,5 @@
 [build]
-  command = "NITRO_PRESET=netlify npm run build && echo '---OUTPUT---' && find . -name 'index.html' | head -20"
+  command = "NITRO_PRESET=netlify npm run build && echo '---FILES---' && find .netlify -type f -name '*.html' | head -20 && find .netlify -type d | head -20"
   publish = ".netlify/static"
 
 [build.environment]
