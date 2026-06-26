@@ -1,1 +1,17 @@
-/*    /index.html   200
+# SPA fallback for all client-side routes
+/login              /index.html   200
+/register           /index.html   200
+/reset-password     /index.html   200
+/about              /index.html   200
+/contact            /index.html   200
+/faq                /index.html   200
+/cart               /index.html   200
+/reviews            /index.html   200
+/products           /index.html   200
+/products/*         /index.html   200
+/legal/*            /index.html   200
+/dashboard          /index.html   200
+/dashboard/*        /index.html   200
+/admin              /index.html   200
+/admin/*            /index.html   200
+/*                  /index.html   200
