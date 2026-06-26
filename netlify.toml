@@ -1,12 +1,6 @@
 [build]
-  command = "NITRO_PRESET=netlify npm run build && echo '---FILES---' && find .netlify -type f -name '*.html' | head -20 && find .netlify -type d | head -20"
+  command = "NITRO_PRESET=netlify npm run build; echo '=== ALL OUTPUT ==='; find . -not -path './node_modules/*' -not -path './.git/*' -name '*.html' 2>/dev/null; echo '=== DIRS ==='; ls -la .netlify/ 2>/dev/null; ls -la .output/ 2>/dev/null"
   publish = ".netlify/static"
 
 [build.environment]
   NODE_VERSION = "20"
-
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/server"
-  status = 200
-  force = true
