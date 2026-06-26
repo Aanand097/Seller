@@ -14,8 +14,7 @@ export default defineConfig({
         /^@radix-ui\/.*/,
         /^framer-motion/,
         "sonner",
-        "react",
-        "react-dom",
+        // react र react-dom हटाइयो — bundle हुनुपर्छ
       ],
     },
   },
