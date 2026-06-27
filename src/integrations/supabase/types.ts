@@ -76,6 +76,7 @@ export type Database = {
           delivered: boolean
           id: string
           message: string
+          product_id: string | null
           receiver_id: string
           seen: boolean
           sender_id: string
@@ -85,6 +86,7 @@ export type Database = {
           delivered?: boolean
           id?: string
           message: string
+          product_id?: string | null
           receiver_id: string
           seen?: boolean
           sender_id: string
@@ -94,11 +96,20 @@ export type Database = {
           delivered?: boolean
           id?: string
           message?: string
+          product_id?: string | null
           receiver_id?: string
           seen?: boolean
           sender_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "messages_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
