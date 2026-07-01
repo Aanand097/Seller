@@ -1,5 +1,10 @@
-export const formatPrice = (n: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+export const formatPrice = (n: number) => {
+  const value = new Intl.NumberFormat("en-NP", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(Number.isFinite(n) ? n : 0);
+  return `रु ${value}`;
+};
 
 export const formatDate = (d: string | Date) =>
   new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
