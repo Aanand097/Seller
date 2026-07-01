@@ -75,7 +75,10 @@ export type Database = {
           created_at: string
           delivered: boolean
           id: string
+          image_url: string | null
           message: string
+          payment_proof: boolean
+          payment_status: string | null
           product_id: string | null
           receiver_id: string
           seen: boolean
@@ -85,7 +88,10 @@ export type Database = {
           created_at?: string
           delivered?: boolean
           id?: string
+          image_url?: string | null
           message: string
+          payment_proof?: boolean
+          payment_status?: string | null
           product_id?: string | null
           receiver_id: string
           seen?: boolean
@@ -95,7 +101,10 @@ export type Database = {
           created_at?: string
           delivered?: boolean
           id?: string
+          image_url?: string | null
           message?: string
+          payment_proof?: boolean
+          payment_status?: string | null
           product_id?: string | null
           receiver_id?: string
           seen?: boolean
