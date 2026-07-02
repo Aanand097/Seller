@@ -38,6 +38,8 @@ type ProductLite = { id: string; title: string; price: number; image_url: string
 type OrderLite = { id: string; total_price: number; payment_status: string; delivery_status: string; payment_method: string };
 type Profile = { id: string; full_name: string | null; email: string | null; avatar_url: string | null };
 
+const chatRoomName = (userId: string, adminId: string) => `support-chat:${userId}:${adminId}`;
+
 function Chat() {
   const { user, isAdmin, loading } = useAuth();
   if (loading || !user) return <div className="p-8 text-center text-muted-foreground">Loading…</div>;
@@ -226,7 +228,7 @@ function UserChat({ userId }: { userId: string }) {
   useEffect(() => {
     if (!adminId) return;
     const ch = supabase
-      .channel(`chat:${userId}:${adminId}`, { config: { broadcast: { self: false } } })
+      .channel(chatRoomName(userId, adminId), { config: { broadcast: { self: false } } })
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (p: any) => {
         const m = p.new as Msg;
         if ((m.sender_id === userId && m.receiver_id === adminId) || (m.sender_id === adminId && m.receiver_id === userId)) {
@@ -407,6 +409,7 @@ function AdminInbox({ adminId }: { adminId: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingTimeout = useRef<any>(null);
 
   const loadProfiles = async (ids: string[]) => {
@@ -471,6 +474,22 @@ function AdminInbox({ adminId }: { adminId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adminId, active]);
 
+  useEffect(() => {
+    if (!active) return;
+    const ch = supabase
+      .channel(chatRoomName(active, adminId), { config: { broadcast: { self: false } } })
+      .on("broadcast", { event: "typing" }, (p: any) => {
+        if (p.payload?.from === active) {
+          setUserTyping(true);
+          clearTimeout(typingTimeout.current);
+          typingTimeout.current = setTimeout(() => setUserTyping(false), 2500);
+        }
+      })
+      .subscribe();
+    typingChannelRef.current = ch;
+    return () => { void supabase.removeChannel(ch); typingChannelRef.current = null; };
+  }, [active, adminId]);
+
   const threads = useMemo(() => {
     const byUser: Record<string, { last: Msg; unread: number }> = {};
     for (const m of all) {
@@ -515,7 +534,7 @@ function AdminInbox({ adminId }: { adminId: string }) {
   };
 
   const onTyping = () => {
-    channelRef.current?.send({ type: "broadcast", event: "typing", payload: { from: adminId } });
+    typingChannelRef.current?.send({ type: "broadcast", event: "typing", payload: { from: adminId } });
   };
 
   const send = async (e: React.FormEvent) => {
