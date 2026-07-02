@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ShoppingCart, MessageCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +27,7 @@ export function ProductCard({ product, index = 0 }: { product: ProductRow; index
 
   const addToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!user) {
       navigate({ to: "/login" });
       return;
@@ -48,7 +48,18 @@ export function ProductCard({ product, index = 0 }: { product: ProductRow; index
       transition={{ duration: 0.4, delay: index * 0.05 }}
       className="group"
     >
-      <Link to="/products/$id" params={{ id: product.id }} className="block h-full">
+      <div
+        role="link"
+        tabIndex={0}
+        onClick={() => navigate({ to: "/products/$id", params: { id: product.id } })}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            navigate({ to: "/products/$id", params: { id: product.id } });
+          }
+        }}
+        className="block h-full cursor-pointer"
+      >
         <div className="h-full rounded-2xl border bg-card overflow-hidden hover-lift relative">
           <div className="aspect-[16/10] relative overflow-hidden bg-gradient-to-br from-accent to-white">
             {product.image_url ? (
@@ -85,7 +96,7 @@ export function ProductCard({ product, index = 0 }: { product: ProductRow; index
                 <Button size="icon" variant="outline" onClick={addToCart} aria-label="Add to cart">
                   <ShoppingCart className="h-4 w-4" />
                 </Button>
-                <Button size="icon" variant="outline" onClick={(e) => { e.preventDefault(); navigate({ to: "/dashboard/chat", search: { product: product.id } as any }); }} aria-label="Chat about this product">
+                <Button size="icon" variant="outline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate({ to: "/dashboard/chat", search: { product: product.id } as any }); }} aria-label="Chat about this product">
                   <MessageCircle className="h-4 w-4" />
                 </Button>
                 <a
@@ -103,7 +114,7 @@ export function ProductCard({ product, index = 0 }: { product: ProductRow; index
             </div>
           </div>
         </div>
-      </Link>
+      </div>
     </motion.div>
   );
 }
