@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Sign in — NexusAI" }] }),
+  head: () => ({ meta: [{ title: "Sign in — NextGen E-Learning" }] }),
   validateSearch: (s: Record<string, unknown>) => ({ redirect: typeof s.redirect === "string" ? s.redirect : undefined }),
   component: Login,
 });
@@ -49,7 +49,7 @@ function Login() {
       <section className="container mx-auto max-w-md px-4 py-16">
         <div className="glass rounded-2xl p-8">
           <h1 className="font-display text-3xl font-bold text-center">Welcome back</h1>
-          <p className="text-center text-muted-foreground text-sm mt-2">Sign in to your NexusAI account</p>
+          <p className="text-center text-muted-foreground text-sm mt-2">Sign in to your NextGen E-Learning account</p>
           <form onSubmit={submit} className="mt-6 space-y-4">
             <div className="space-y-1.5"><Label>Email</Label><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
             <div className="space-y-1.5">

@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/contact")({
-  head: () => ({ meta: [{ title: "Contact — NexusAI" }] }),
+  head: () => ({ meta: [{ title: "Contact — NextGen E-Learning" }] }),
   component: Contact,
 });
 

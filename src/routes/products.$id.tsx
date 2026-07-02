@@ -10,6 +10,7 @@ import { formatPrice } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 import { buildWhatsAppUrl } from "@/lib/site-config";
+import { addProductToCart } from "@/lib/cart";
 
 export const Route = createFileRoute("/products/$id")({
   component: ProductDetail,
@@ -27,14 +28,22 @@ function ProductDetail() {
 
   const buy = async () => {
     if (!user) return navigate({ to: "/login" });
-    await supabase.from("cart_items").upsert({ user_id: user.id, product_id: id, quantity: 1 }, { onConflict: "user_id,product_id" });
+    try {
+      await addProductToCart(user.id, id);
+    } catch (error: any) {
+      toast.error(error?.message ?? "Could not add to cart");
+      return;
+    }
     navigate({ to: "/cart" });
   };
   const addToCart = async () => {
     if (!user) return navigate({ to: "/login" });
-    const { error } = await supabase.from("cart_items").upsert({ user_id: user.id, product_id: id, quantity: 1 }, { onConflict: "user_id,product_id" });
-    if (error) toast.error(error.message);
-    else toast.success("Added to cart");
+    try {
+      await addProductToCart(user.id, id);
+      toast.success("Added to cart");
+    } catch (error: any) {
+      toast.error(error?.message ?? "Could not add to cart");
+    }
   };
 
   return (

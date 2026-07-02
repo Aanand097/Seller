@@ -77,6 +77,7 @@ export type Database = {
           id: string
           image_url: string | null
           message: string
+          order_id: string | null
           payment_proof: boolean
           payment_status: string | null
           product_id: string | null
@@ -90,6 +91,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           message: string
+          order_id?: string | null
           payment_proof?: boolean
           payment_status?: string | null
           product_id?: string | null
@@ -103,6 +105,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           message?: string
+          order_id?: string | null
           payment_proof?: boolean
           payment_status?: string | null
           product_id?: string | null
@@ -111,6 +114,13 @@ export type Database = {
           sender_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "messages_product_id_fkey"
             columns: ["product_id"]
@@ -188,33 +198,59 @@ export type Database = {
       }
       orders: {
         Row: {
+          account_details: string | null
           admin_note: string | null
           created_at: string
+          delivered_at: string | null
           delivery_status: string
           id: string
+          payment_method: string
+          payment_proof_message_id: string | null
+          payment_reference: string | null
           payment_status: string
+          payment_verified_at: string | null
           total_price: number
           user_id: string
         }
         Insert: {
+          account_details?: string | null
           admin_note?: string | null
           created_at?: string
+          delivered_at?: string | null
           delivery_status?: string
           id?: string
+          payment_method?: string
+          payment_proof_message_id?: string | null
+          payment_reference?: string | null
           payment_status?: string
+          payment_verified_at?: string | null
           total_price?: number
           user_id: string
         }
         Update: {
+          account_details?: string | null
           admin_note?: string | null
           created_at?: string
+          delivered_at?: string | null
           delivery_status?: string
           id?: string
+          payment_method?: string
+          payment_proof_message_id?: string | null
+          payment_reference?: string | null
           payment_status?: string
+          payment_verified_at?: string | null
           total_price?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_payment_proof_message_id_fkey"
+            columns: ["payment_proof_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {

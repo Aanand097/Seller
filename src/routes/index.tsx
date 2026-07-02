@@ -12,9 +12,9 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "NexusAI — Premium AI Subscription Marketplace" },
+      { title: "NextGen E-Learning — Premium AI Learning" },
       { name: "description", content: "Discover and buy the world's best AI subscriptions in one premium marketplace." },
-      { property: "og:title", content: "NexusAI — Premium AI Subscription Marketplace" },
+      { property: "og:title", content: "NextGen E-Learning — Premium AI Learning" },
       { property: "og:description", content: "Discover and buy the world's best AI subscriptions in one premium marketplace." },
     ],
   }),
@@ -48,10 +48,10 @@ function Index() {
           <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-xs font-semibold mb-6">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
-              The premium AI subscription marketplace
+              NextGen E-Learning premium marketplace
             </div>
             <h1 className="font-display text-5xl md:text-7xl font-bold tracking-tight leading-[1.05]">
-              Every premium <span className="gradient-text">AI tool</span>,<br />one marketplace.
+              Every premium <span className="gradient-text">AI learning tool</span>,<br />one marketplace.
             </h1>
             <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
               ChatGPT, Claude, Midjourney, Cursor and more. Browse, subscribe and manage every AI tool you love — in one beautifully unified hub.

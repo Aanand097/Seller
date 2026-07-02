@@ -34,7 +34,7 @@ const PAGES: Record<string, Page> = {
     intro:
       "We want every purchase to be worth it. This policy covers product pricing, refunds and order disputes.",
     sections: [
-      { heading: "Pricing", body: "Prices are shown in USD on every product page and at checkout. Discounted prices reflect the final price you pay; the original price is shown with a strike-through. Taxes, where applicable, are included. Prices may change without notice but orders already placed are honoured at the price shown at the time of purchase." },
+      { heading: "Pricing", body: "Prices are shown in NPR (रु) on every product page and at checkout. Discounted prices reflect the final price you pay; the original price is shown with a strike-through. Taxes, where applicable, are included. Prices may change without notice but orders already placed are honoured at the price shown at the time of purchase." },
       { heading: "Refund window", body: "You can request a full refund within 24 hours of purchase if the subscription cannot be activated or differs materially from its description." },
       { heading: "How to request", body: "Open the in-app Chat with support or email support@nextgen-elearning.com with your order ID. Refunds are returned to the original payment method within 5–10 business days." },
       { heading: "Non-refundable cases", body: "Refunds are not granted for change of mind after a credential has been delivered and used, or where abuse / fraud is detected." },

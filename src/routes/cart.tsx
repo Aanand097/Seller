@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Trash2, ShoppingBag } from "lucide-react";
+import { Trash2, ShoppingBag, CreditCard, QrCode } from "lucide-react";
 import { PublicLayout } from "@/components/site/PublicLayout";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,9 +9,15 @@ import { useAuth } from "@/lib/auth-context";
 import { formatPrice } from "@/lib/format";
 import { toast } from "sonner";
 import { placeOrder } from "@/lib/orders.functions";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import esewaQr from "@/assets/esewa-qr.jpeg.asset.json";
+import { ESEWA_ACCOUNT_ID, ESEWA_ACCOUNT_NAME } from "@/lib/site-config";
+import { setCartItemQuantity } from "@/lib/cart";
 
 export const Route = createFileRoute("/cart")({
-  head: () => ({ meta: [{ title: "Cart — NexusAI" }] }),
+  head: () => ({ meta: [{ title: "Cart — NextGen E-Learning" }] }),
   component: CartPage,
 });
 
@@ -20,6 +26,8 @@ function CartPage() {
   const nav = useNavigate();
   const [items, setItems] = useState<any[] | null>(null);
   const [placing, setPlacing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"esewa" | "manual">("esewa");
+  const [paymentReference, setPaymentReference] = useState("");
   const placeOrderFn = useServerFn(placeOrder);
 
   const load = async () => {
@@ -27,20 +35,39 @@ function CartPage() {
     const { data } = await supabase.from("cart_items").select("*, products(*)").eq("user_id", user.id);
     setItems(data ?? []);
   };
-  useEffect(() => { if (!loading) void load(); }, [user, loading]);
+  useEffect(() => {
+    if (loading) return;
+    void load();
+    if (!user) return;
+    const ch = supabase
+      .channel(`cart-page-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "cart_items", filter: `user_id=eq.${user.id}` }, () => void load())
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, loading]);
 
   const remove = async (id: string) => {
     await supabase.from("cart_items").delete().eq("id", id);
     void load();
   };
 
+  const changeQty = async (id: string, quantity: number) => {
+    try {
+      await setCartItemQuantity(id, quantity);
+      void load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not update quantity");
+    }
+  };
+
   const checkout = async () => {
     if (!user || !items?.length || placing) return;
     setPlacing(true);
     try {
-      await placeOrderFn();
-      toast.success("Order placed!");
-      nav({ to: "/dashboard/orders" });
+      const result = await placeOrderFn({ data: { paymentMethod, paymentReference } });
+      toast.success("Order placed. Upload your payment screenshot in chat.");
+      nav({ to: "/dashboard/chat", search: { order: result.orderId } as any });
     } catch (e: any) {
       toast.error(e?.message ?? "Order failed");
     } finally {
@@ -63,26 +90,69 @@ function CartPage() {
             <Button asChild className="mt-6"><Link to="/products">Browse products</Link></Button>
           </div>
         ) : (
-          <div className="grid md:grid-cols-[1fr_320px] gap-6">
-            <div className="space-y-3">
-              {items.map((i) => (
-                <div key={i.id} className="rounded-xl border bg-card p-4 flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-lg bg-accent grid place-items-center text-primary font-bold">{i.products.title[0]}</div>
-                  <div className="flex-1">
-                    <div className="font-semibold">{i.products.title}</div>
-                    <div className="text-sm text-muted-foreground">{i.products.subscription_duration}</div>
+          <div className="grid md:grid-cols-[1fr_350px] gap-6">
+            <div className="space-y-6">
+              <div className="space-y-3">
+                {items.map((i) => (
+                  <div key={i.id} className="rounded-xl border bg-card p-4 flex items-center gap-4">
+                    <div className="h-16 w-16 rounded-lg bg-accent grid place-items-center text-primary font-bold">{i.products.title[0]}</div>
+                    <div className="flex-1">
+                      <div className="font-semibold">{i.products.title}</div>
+                      <div className="text-sm text-muted-foreground">{i.products.subscription_duration}</div>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-md border px-2 py-1">
+                      <button type="button" className="h-6 w-6 text-sm" onClick={() => changeQty(i.id, Number(i.quantity) - 1)} aria-label="Decrease quantity">−</button>
+                      <span className="w-6 text-center text-sm font-semibold">{i.quantity}</span>
+                      <button type="button" className="h-6 w-6 text-sm" onClick={() => changeQty(i.id, Number(i.quantity) + 1)} aria-label="Increase quantity">+</button>
+                    </div>
+                    <div className="font-semibold">{formatPrice(Number(i.products.price) * Number(i.quantity))}</div>
+                    <Button size="icon" variant="ghost" onClick={() => remove(i.id)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
-                  <div className="font-semibold">{formatPrice(Number(i.products.price))}</div>
-                  <Button size="icon" variant="ghost" onClick={() => remove(i.id)}><Trash2 className="h-4 w-4" /></Button>
+                ))}
+              </div>
+
+              <div className="rounded-2xl border bg-card p-6">
+                <h3 className="font-display font-bold text-lg mb-4 flex items-center gap-2"><CreditCard className="h-5 w-5" /> Payment Method</h3>
+                <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value === "manual" ? "manual" : "esewa")} className="grid grid-cols-2 gap-4">
+                  <div>
+                    <RadioGroupItem value="esewa" id="esewa" className="peer sr-only" />
+                    <Label htmlFor="esewa" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                      <span className="font-semibold">eSewa</span>
+                    </Label>
+                  </div>
+                  <div>
+                    <RadioGroupItem value="manual" id="manual" className="peer sr-only" />
+                    <Label htmlFor="manual" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                      <span className="font-semibold">Manual</span>
+                    </Label>
+                  </div>
+                </RadioGroup>
+
+                <div className="mt-6 space-y-4">
+                  <div className="rounded-xl border bg-background p-4 text-sm">
+                    <div className="flex items-center gap-2 font-bold mb-3"><QrCode className="h-4 w-4" /> Scan eSewa QR to pay</div>
+                    <img src={esewaQr.url} alt="eSewa payment QR for NextGen E-Learning" className="mx-auto w-full max-w-[260px] rounded-lg border bg-white object-contain" />
+                    <div className="mt-3 grid gap-1 text-center">
+                      <p className="font-semibold">{ESEWA_ACCOUNT_NAME}</p>
+                      <p className="text-muted-foreground">eSewa ID: {ESEWA_ACCOUNT_ID}</p>
+                      <p className="font-bold text-base">Pay total: {formatPrice(total)}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reference">Transaction ID (optional)</Label>
+                    <Input id="reference" placeholder="eSewa reference ID if available" value={paymentReference} onChange={(e) => setPaymentReference(e.target.value)} />
+                    <p className="text-xs text-muted-foreground">After checkout, chat will open so you can upload the payment screenshot for admin verification.</p>
+                  </div>
                 </div>
-              ))}
+              </div>
             </div>
-            <div className="rounded-2xl glass p-6 h-fit">
+
+            <div className="rounded-2xl glass p-6 h-fit sticky top-24">
               <h3 className="font-display font-bold text-lg mb-4">Summary</h3>
               <div className="flex justify-between mb-2"><span>Subtotal</span><span>{formatPrice(total)}</span></div>
               <div className="flex justify-between mb-4 text-sm text-muted-foreground"><span>Tax</span><span>Included</span></div>
               <div className="flex justify-between font-bold text-lg pt-4 border-t"><span>Total</span><span className="gradient-text">{formatPrice(total)}</span></div>
-              <Button onClick={checkout} disabled={placing} size="lg" className="w-full mt-6 text-white" style={{ background: "var(--gradient-primary)" }}>{placing ? "Placing order..." : "Checkout"}</Button>
+              <Button onClick={checkout} disabled={placing} size="lg" className="w-full mt-6 text-white" style={{ background: "var(--gradient-primary)" }}>{placing ? "Creating order..." : "I paid / Continue to proof upload"}</Button>
             </div>
           </div>
         )}

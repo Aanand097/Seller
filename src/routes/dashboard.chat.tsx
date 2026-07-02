@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Send, Inbox, X, Package, Paperclip, ImageIcon, CheckCircle2, XCircle, Check, CheckCheck, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -7,12 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { timeAgo, formatPrice } from "@/lib/format";
 import { toast } from "sonner";
+import { getSupportAdmin, verifyPaymentProof } from "@/lib/chat.functions";
 
-type Search = { product?: string };
+type Search = { product?: string; order?: string };
 
 export const Route = createFileRoute("/dashboard/chat")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     product: typeof s.product === "string" ? s.product : undefined,
+    order: typeof s.order === "string" ? s.order : undefined,
   }),
   component: Chat,
 });
@@ -27,11 +30,15 @@ type Msg = {
   delivered?: boolean | null;
   product_id?: string | null;
   image_url?: string | null;
+  order_id?: string | null;
   payment_proof?: boolean | null;
   payment_status?: "pending" | "approved" | "rejected" | null;
 };
 type ProductLite = { id: string; title: string; price: number; image_url: string | null };
+type OrderLite = { id: string; total_price: number; payment_status: string; delivery_status: string; payment_method: string };
 type Profile = { id: string; full_name: string | null; email: string | null; avatar_url: string | null };
+
+const chatRoomName = (userId: string, adminId: string) => `support-chat:${userId}:${adminId}`;
 
 function Chat() {
   const { user, isAdmin, loading } = useAuth();
@@ -54,6 +61,28 @@ function useProductsByIds(ids: string[]) {
         return next;
       });
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ids.join(",")]);
+  return map;
+}
+
+function useOrdersByIds(ids: string[]) {
+  const [map, setMap] = useState<Record<string, OrderLite>>({});
+  useEffect(() => {
+    const missing = ids.filter((id) => id && !map[id]);
+    if (!missing.length) return;
+    void supabase
+      .from("orders")
+      .select("id,total_price,payment_status,delivery_status,payment_method")
+      .in("id", missing)
+      .then(({ data }) => {
+        if (!data) return;
+        setMap((prev) => {
+          const next = { ...prev };
+          for (const o of data as any[]) next[o.id] = o as OrderLite;
+          return next;
+        });
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ids.join(",")]);
   return map;
@@ -111,6 +140,23 @@ function PaymentStatusBadge({ status }: { status?: string | null }) {
   return <div className={`mt-1 inline-block text-[10px] font-semibold border rounded-full px-2 py-0.5 ${m.cls}`}>{m.text}</div>;
 }
 
+function OrderChip({ order }: { order?: OrderLite }) {
+  if (!order) return null;
+  return (
+    <div className="mb-1.5 rounded-lg border bg-background/80 p-2 text-xs">
+      <div className="flex items-center justify-between gap-3">
+        <span className="font-semibold text-foreground">Order #{order.id.slice(0, 8)}</span>
+        <span className="font-bold text-primary">{formatPrice(Number(order.total_price))}</span>
+      </div>
+      <div className="mt-1 flex flex-wrap gap-1 text-[10px] text-muted-foreground">
+        <span className="rounded border px-1.5 py-0.5 capitalize">{order.payment_method}</span>
+        <span className="rounded border px-1.5 py-0.5 capitalize">payment: {order.payment_status}</span>
+        <span className="rounded border px-1.5 py-0.5 capitalize">delivery: {order.delivery_status}</span>
+      </div>
+    </div>
+  );
+}
+
 function AttachmentImage({ path, signed }: { path: string; signed?: string }) {
   if (!signed) return <div className="h-40 w-56 rounded-lg bg-accent grid place-items-center text-xs text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /></div>;
   return (
@@ -138,12 +184,14 @@ function validateImage(file: File): string | null {
 /* ---------- USER SIDE ---------- */
 
 function UserChat({ userId }: { userId: string }) {
-  const { product: productParam } = Route.useSearch();
+  const { product: productParam, order: orderParam } = Route.useSearch();
   const navigate = useNavigate();
+  const getSupportAdminFn = useServerFn(getSupportAdmin);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [adminId, setAdminId] = useState<string | null>(null);
   const [attachedProduct, setAttachedProduct] = useState<string | undefined>(productParam);
+  const [attachedOrder, setAttachedOrder] = useState<string | undefined>(orderParam);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [markAsPayment, setMarkAsPayment] = useState(false);
@@ -155,11 +203,18 @@ function UserChat({ userId }: { userId: string }) {
   const typingTimeout = useRef<any>(null);
 
   useEffect(() => { setAttachedProduct(productParam); }, [productParam]);
+  useEffect(() => { setAttachedOrder(orderParam); setMarkAsPayment(!!orderParam); }, [orderParam]);
 
   useEffect(() => {
     void (async () => {
-      const { data: admins } = await supabase.from("user_roles").select("user_id").eq("role", "admin").limit(1);
-      const target = admins?.[0]?.user_id ?? userId;
+      let target: string;
+      try {
+        const result = await getSupportAdminFn();
+        target = result.adminId;
+      } catch (e: any) {
+        toast.error(e?.message ?? "Support inbox is not available");
+        return;
+      }
       setAdminId(target);
       const { data } = await supabase
         .from("messages")
@@ -168,12 +223,12 @@ function UserChat({ userId }: { userId: string }) {
         .order("created_at");
       setMsgs((data ?? []) as Msg[]);
     })();
-  }, [userId]);
+  }, [userId, getSupportAdminFn]);
 
   useEffect(() => {
     if (!adminId) return;
     const ch = supabase
-      .channel(`chat:${userId}:${adminId}`, { config: { broadcast: { self: false } } })
+      .channel(chatRoomName(userId, adminId), { config: { broadcast: { self: false } } })
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (p: any) => {
         const m = p.new as Msg;
         if ((m.sender_id === userId && m.receiver_id === adminId) || (m.sender_id === adminId && m.receiver_id === userId)) {
@@ -214,6 +269,11 @@ function UserChat({ userId }: { userId: string }) {
     [msgs, attachedProduct],
   );
   const products = useProductsByIds(productIds);
+  const orderIds = useMemo(
+    () => Array.from(new Set([...(attachedOrder ? [attachedOrder] : []), ...(msgs.map((m) => m.order_id).filter(Boolean) as string[])])),
+    [msgs, attachedOrder],
+  );
+  const orders = useOrdersByIds(orderIds);
   const imagePaths = useMemo(() => msgs.map((m) => m.image_url).filter(Boolean) as string[], [msgs]);
   const signed = useSignedUrls(imagePaths);
 
@@ -243,11 +303,12 @@ function UserChat({ userId }: { userId: string }) {
         message: text.trim() || (file ? "📎 Image" : ""),
       };
       if (attachedProduct) payload.product_id = attachedProduct;
+      if (attachedOrder) payload.order_id = attachedOrder;
       if (imagePath) payload.image_url = imagePath;
       if (markAsPayment && imagePath) { payload.payment_proof = true; payload.payment_status = "pending"; }
       const { error } = await supabase.from("messages").insert(payload);
       if (error) throw error;
-      setText(""); setFile(null); setPreview(null); setMarkAsPayment(false); setAttachedProduct(undefined);
+      setText(""); setFile(null); setPreview(null); setMarkAsPayment(false); setAttachedProduct(undefined); setAttachedOrder(undefined);
       if (fileRef.current) fileRef.current.value = "";
       void navigate({ to: "/dashboard/chat", search: {} });
     } catch (err: any) {
@@ -266,10 +327,12 @@ function UserChat({ userId }: { userId: string }) {
         {msgs.map((m) => {
           const mine = m.sender_id === userId;
           const prod = m.product_id ? products[m.product_id] : undefined;
+          const order = m.order_id ? orders[m.order_id] : undefined;
           return (
             <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[80%] rounded-2xl px-3 py-2 ${mine ? "text-white" : "bg-accent text-foreground"}`} style={mine ? { background: "var(--gradient-primary)" } : undefined}>
                 {prod && <ProductChip p={prod} />}
+                {order && <OrderChip order={order} />}
                 {m.image_url && <div className="mb-1"><AttachmentImage path={m.image_url} signed={signed[m.image_url]} /></div>}
                 {m.message && <div className="text-sm px-1 whitespace-pre-wrap break-words">{m.message}</div>}
                 <PaymentStatusBadge status={m.payment_status ?? undefined} />
@@ -295,6 +358,16 @@ function UserChat({ userId }: { userId: string }) {
         </div>
       )}
 
+      {attachedOrder && (
+        <div className="mt-2 rounded-xl border bg-card p-2 flex items-center justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Payment proof for</div>
+            <OrderChip order={orders[attachedOrder]} />
+          </div>
+          <Button type="button" variant="ghost" size="icon" onClick={() => { setAttachedOrder(undefined); setMarkAsPayment(false); void navigate({ to: "/dashboard/chat", search: {} }); }}><X className="h-4 w-4" /></Button>
+        </div>
+      )}
+
       {preview && (
         <div className="mt-2 rounded-xl border bg-card p-2 flex items-center gap-3">
           <img src={preview} alt="preview" className="h-16 w-16 rounded-lg object-cover" />
@@ -312,7 +385,7 @@ function UserChat({ userId }: { userId: string }) {
       <form onSubmit={send} className="mt-3 flex gap-2">
         <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => onPickFile(e.target.files?.[0] ?? null)} />
         <Button type="button" variant="outline" size="icon" onClick={() => fileRef.current?.click()} title="Attach image"><Paperclip className="h-4 w-4" /></Button>
-        <Input value={text} onChange={(e) => { setText(e.target.value); onTyping(); }} placeholder={attachedProduct ? "Ask about this product…" : "Type a message…"} />
+        <Input value={text} onChange={(e) => { setText(e.target.value); onTyping(); }} placeholder={attachedOrder ? "Upload screenshot and add any payment note…" : attachedProduct ? "Ask about this product…" : "Type a message…"} />
         <Button type="submit" disabled={sending || (!text.trim() && !file)} className="text-white" style={{ background: "var(--gradient-primary)" }}>
           {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
@@ -324,6 +397,7 @@ function UserChat({ userId }: { userId: string }) {
 /* ---------- ADMIN SIDE ---------- */
 
 function AdminInbox({ adminId }: { adminId: string }) {
+  const verifyPaymentProofFn = useServerFn(verifyPaymentProof);
   const [all, setAll] = useState<Msg[]>([]);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [active, setActive] = useState<string | null>(null);
@@ -335,6 +409,7 @@ function AdminInbox({ adminId }: { adminId: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingTimeout = useRef<any>(null);
 
   const loadProfiles = async (ids: string[]) => {
@@ -373,7 +448,7 @@ function AdminInbox({ adminId }: { adminId: string }) {
           if (!profiles[other]) void loadProfiles([other]);
           if (m.receiver_id === adminId) {
             void supabase.from("messages").update({ delivered: true }).eq("id", m.id);
-            if (Notification && Notification.permission === "granted") {
+            if (typeof Notification !== "undefined" && Notification.permission === "granted") {
               new Notification("New message", { body: m.message?.slice(0, 80) });
             }
           }
@@ -383,13 +458,6 @@ function AdminInbox({ adminId }: { adminId: string }) {
         const m = p.new as Msg;
         setAll((prev) => prev.map((x) => (x.id === m.id ? { ...x, ...m } : x)));
       })
-      .on("broadcast", { event: "typing" }, (p: any) => {
-        if (active && p.payload?.from === active) {
-          setUserTyping(true);
-          clearTimeout(typingTimeout.current);
-          typingTimeout.current = setTimeout(() => setUserTyping(false), 2500);
-        }
-      })
       .subscribe();
     channelRef.current = ch;
     if (typeof Notification !== "undefined" && Notification.permission === "default") {
@@ -397,7 +465,23 @@ function AdminInbox({ adminId }: { adminId: string }) {
     }
     return () => { void supabase.removeChannel(ch); channelRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adminId, active]);
+  }, [adminId]);
+
+  useEffect(() => {
+    if (!active) return;
+    const ch = supabase
+      .channel(chatRoomName(active, adminId), { config: { broadcast: { self: false } } })
+      .on("broadcast", { event: "typing" }, (p: any) => {
+        if (p.payload?.from === active) {
+          setUserTyping(true);
+          clearTimeout(typingTimeout.current);
+          typingTimeout.current = setTimeout(() => setUserTyping(false), 2500);
+        }
+      })
+      .subscribe();
+    typingChannelRef.current = ch;
+    return () => { void supabase.removeChannel(ch); typingChannelRef.current = null; };
+  }, [active, adminId]);
 
   const threads = useMemo(() => {
     const byUser: Record<string, { last: Msg; unread: number }> = {};
@@ -418,6 +502,8 @@ function AdminInbox({ adminId }: { adminId: string }) {
 
   const productIds = useMemo(() => Array.from(new Set(all.map((m) => m.product_id).filter(Boolean) as string[])), [all]);
   const products = useProductsByIds(productIds);
+  const orderIds = useMemo(() => Array.from(new Set(all.map((m) => m.order_id).filter(Boolean) as string[])), [all]);
+  const orders = useOrdersByIds(orderIds);
   const imagePaths = useMemo(() => all.map((m) => m.image_url).filter(Boolean) as string[], [all]);
   const signed = useSignedUrls(imagePaths);
 
@@ -441,7 +527,7 @@ function AdminInbox({ adminId }: { adminId: string }) {
   };
 
   const onTyping = () => {
-    channelRef.current?.send({ type: "broadcast", event: "typing", payload: { from: adminId } });
+    typingChannelRef.current?.send({ type: "broadcast", event: "typing", payload: { from: adminId } });
   };
 
   const send = async (e: React.FormEvent) => {
@@ -466,9 +552,12 @@ function AdminInbox({ adminId }: { adminId: string }) {
   };
 
   const setPaymentStatus = async (id: string, status: "approved" | "rejected") => {
-    const { error } = await supabase.from("messages").update({ payment_status: status }).eq("id", id);
-    if (error) toast.error(error.message);
-    else toast.success(`Payment ${status}`);
+    try {
+      await verifyPaymentProofFn({ data: { messageId: id, status } });
+      toast.success(`Payment ${status}`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Payment update failed");
+    }
   };
 
   const label = (uid: string) => profiles[uid]?.full_name || profiles[uid]?.email || uid.slice(0, 8);
@@ -479,6 +568,13 @@ function AdminInbox({ adminId }: { adminId: string }) {
     const last = withProduct[withProduct.length - 1];
     return last?.product_id ? products[last.product_id] : undefined;
   }, [conversation, products, active]);
+
+  const lastOrderForActive = useMemo(() => {
+    if (!active) return undefined;
+    const withOrder = conversation.filter((m) => m.order_id);
+    const last = withOrder[withOrder.length - 1];
+    return last?.order_id ? orders[last.order_id] : undefined;
+  }, [conversation, orders, active]);
 
   return (
     <div>
@@ -492,6 +588,7 @@ function AdminInbox({ adminId }: { adminId: string }) {
           ) : (
             threads.map(([uid, t]) => {
               const lastProd = t.last.product_id ? products[t.last.product_id] : undefined;
+              const lastOrder = t.last.order_id ? orders[t.last.order_id] : undefined;
               return (
                 <button key={uid} onClick={() => setActive(uid)} className={`w-full text-left p-3 border-b flex items-center gap-3 hover:bg-accent/50 transition ${active === uid ? "bg-accent" : ""}`}>
                   <div className="h-9 w-9 rounded-full bg-accent grid place-items-center text-xs font-semibold overflow-hidden shrink-0">
@@ -509,6 +606,11 @@ function AdminInbox({ adminId }: { adminId: string }) {
                     {lastProd && (
                       <div className="text-[10px] mt-1 inline-flex items-center gap-1 text-primary font-medium truncate max-w-full">
                         <Package className="h-3 w-3 shrink-0" /> <span className="truncate">{lastProd.title}</span>
+                      </div>
+                    )}
+                    {lastOrder && (
+                      <div className="text-[10px] mt-1 inline-flex items-center gap-1 text-primary font-medium truncate max-w-full">
+                        <Package className="h-3 w-3 shrink-0" /> <span className="truncate">Order #{lastOrder.id.slice(0, 8)} · {lastOrder.payment_status}</span>
                       </div>
                     )}
                   </div>
@@ -540,16 +642,24 @@ function AdminInbox({ adminId }: { adminId: string }) {
                     <span className="font-medium truncate max-w-[180px]">{lastProductForActive.title}</span>
                   </a>
                 )}
+                {lastOrderForActive && (
+                  <div className="hidden md:flex items-center gap-2 rounded-lg border px-2 py-1 text-xs">
+                    <Package className="h-3.5 w-3.5 text-primary" />
+                    <span className="font-medium truncate max-w-[180px]">Order #{lastOrderForActive.id.slice(0, 8)} · {lastOrderForActive.payment_status}</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
                 {conversation.map((m) => {
                   const mine = m.sender_id === adminId;
                   const prod = m.product_id ? products[m.product_id] : undefined;
+                  const order = m.order_id ? orders[m.order_id] : undefined;
                   return (
                     <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                       <div className={`max-w-[80%] rounded-2xl px-3 py-2 ${mine ? "text-white" : "bg-accent text-foreground"}`} style={mine ? { background: "var(--gradient-primary)" } : undefined}>
                         {prod && <ProductChip p={prod} />}
+                        {order && <OrderChip order={order} />}
                         {m.image_url && <div className="mb-1"><AttachmentImage path={m.image_url} signed={signed[m.image_url]} /></div>}
                         {m.message && <div className="text-sm px-1 whitespace-pre-wrap break-words">{m.message}</div>}
                         <PaymentStatusBadge status={m.payment_status ?? undefined} />

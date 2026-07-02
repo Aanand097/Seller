@@ -11,7 +11,7 @@ const FAQS = [
 ];
 
 export const Route = createFileRoute("/faq")({
-  head: () => ({ meta: [{ title: "FAQ — NexusAI" }] }),
+  head: () => ({ meta: [{ title: "FAQ — NextGen E-Learning" }] }),
   component: () => (
     <PublicLayout>
       <section className="container mx-auto max-w-3xl px-4 py-20">
