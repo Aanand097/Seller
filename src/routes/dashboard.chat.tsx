@@ -458,13 +458,6 @@ function AdminInbox({ adminId }: { adminId: string }) {
         const m = p.new as Msg;
         setAll((prev) => prev.map((x) => (x.id === m.id ? { ...x, ...m } : x)));
       })
-      .on("broadcast", { event: "typing" }, (p: any) => {
-        if (active && p.payload?.from === active) {
-          setUserTyping(true);
-          clearTimeout(typingTimeout.current);
-          typingTimeout.current = setTimeout(() => setUserTyping(false), 2500);
-        }
-      })
       .subscribe();
     channelRef.current = ch;
     if (typeof Notification !== "undefined" && Notification.permission === "default") {
@@ -472,7 +465,7 @@ function AdminInbox({ adminId }: { adminId: string }) {
     }
     return () => { void supabase.removeChannel(ch); channelRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adminId, active]);
+  }, [adminId]);
 
   useEffect(() => {
     if (!active) return;
