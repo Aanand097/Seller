@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import esewaQr from "@/assets/esewa-qr.jpeg.asset.json";
 import { ESEWA_ACCOUNT_ID, ESEWA_ACCOUNT_NAME } from "@/lib/site-config";
+import { setCartItemQuantity } from "@/lib/cart";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({ meta: [{ title: "Cart — NextGen E-Learning" }] }),
@@ -49,6 +50,15 @@ function CartPage() {
   const remove = async (id: string) => {
     await supabase.from("cart_items").delete().eq("id", id);
     void load();
+  };
+
+  const changeQty = async (id: string, quantity: number) => {
+    try {
+      await setCartItemQuantity(id, quantity);
+      void load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not update quantity");
+    }
   };
 
   const checkout = async () => {
@@ -90,7 +100,12 @@ function CartPage() {
                       <div className="font-semibold">{i.products.title}</div>
                       <div className="text-sm text-muted-foreground">{i.products.subscription_duration}</div>
                     </div>
-                    <div className="font-semibold">{formatPrice(Number(i.products.price))}</div>
+                    <div className="flex items-center gap-2 rounded-md border px-2 py-1">
+                      <button type="button" className="h-6 w-6 text-sm" onClick={() => changeQty(i.id, Number(i.quantity) - 1)} aria-label="Decrease quantity">−</button>
+                      <span className="w-6 text-center text-sm font-semibold">{i.quantity}</span>
+                      <button type="button" className="h-6 w-6 text-sm" onClick={() => changeQty(i.id, Number(i.quantity) + 1)} aria-label="Increase quantity">+</button>
+                    </div>
+                    <div className="font-semibold">{formatPrice(Number(i.products.price) * Number(i.quantity))}</div>
                     <Button size="icon" variant="ghost" onClick={() => remove(i.id)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 ))}

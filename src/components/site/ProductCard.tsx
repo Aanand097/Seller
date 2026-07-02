@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useNavigate } from "@tanstack/react-router";
 import { buildWhatsAppUrl } from "@/lib/site-config";
+import { addProductToCart } from "@/lib/cart";
 
 export type ProductRow = {
   id: string;
@@ -32,12 +33,12 @@ export function ProductCard({ product, index = 0 }: { product: ProductRow; index
       navigate({ to: "/login" });
       return;
     }
-    const { error } = await supabase.from("cart_items").upsert(
-      { user_id: user.id, product_id: product.id, quantity: 1 },
-      { onConflict: "user_id,product_id" },
-    );
-    if (error) toast.error(error.message);
-    else toast.success(`${product.title} added to cart`);
+    try {
+      await addProductToCart(user.id, product.id);
+      toast.success(`${product.title} added to cart`);
+    } catch (error: any) {
+      toast.error(error?.message ?? "Could not add to cart");
+    }
   };
 
   return (
