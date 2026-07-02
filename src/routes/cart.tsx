@@ -88,7 +88,7 @@ function CartPage() {
 
               <div className="rounded-2xl border bg-card p-6">
                 <h3 className="font-display font-bold text-lg mb-4 flex items-center gap-2"><CreditCard className="h-5 w-5" /> Payment Method</h3>
-                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="grid grid-cols-2 gap-4">
+                <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value === "manual" ? "manual" : "esewa")} className="grid grid-cols-2 gap-4">
                   <div>
                     <RadioGroupItem value="esewa" id="esewa" className="peer sr-only" />
                     <Label htmlFor="esewa" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
