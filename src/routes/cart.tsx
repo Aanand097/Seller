@@ -34,7 +34,17 @@ function CartPage() {
     const { data } = await supabase.from("cart_items").select("*, products(*)").eq("user_id", user.id);
     setItems(data ?? []);
   };
-  useEffect(() => { if (!loading) void load(); }, [user, loading]);
+  useEffect(() => {
+    if (loading) return;
+    void load();
+    if (!user) return;
+    const ch = supabase
+      .channel(`cart-page-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "cart_items", filter: `user_id=eq.${user.id}` }, () => void load())
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, loading]);
 
   const remove = async (id: string) => {
     await supabase.from("cart_items").delete().eq("id", id);

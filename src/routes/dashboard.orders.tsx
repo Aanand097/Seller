@@ -16,12 +16,18 @@ function Orders() {
   
   useEffect(() => {
     if (!user) return;
-    void supabase
+    const load = () => void supabase
       .from("orders")
       .select("*, order_items(*, products(title))")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .then(({ data }) => setOrders(data ?? []));
+    load();
+    const ch = supabase
+      .channel(`orders-page-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${user.id}` }, load)
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
   }, [user]);
 
   return (

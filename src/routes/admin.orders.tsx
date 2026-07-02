@@ -28,7 +28,15 @@ function AdminOrders() {
     setList(data ?? []);
   };
   
-  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    void load();
+    const ch = supabase
+      .channel("admin-orders-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => void load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "order_items" }, () => void load())
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, []);
 
   const update = async (orderId: string, status: string, paymentStatus?: string, details?: string) => {
     try {
