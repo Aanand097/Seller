@@ -13,10 +13,10 @@ import { Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/reviews")({
   head: () => ({
     meta: [
-      { title: "Customer Reviews — NexusAI" },
+      { title: "Customer Reviews — NextGen E-Learning" },
       { name: "description", content: "See what our community is saying. Read real customer reviews and share your own feedback." },
-      { property: "og:title", content: "Customer Reviews — NexusAI" },
-      { property: "og:description", content: "Real feedback from real users of NexusAI." },
+      { property: "og:title", content: "Customer Reviews — NextGen E-Learning" },
+      { property: "og:description", content: "Real feedback from real users of NextGen E-Learning." },
     ],
   }),
   component: ReviewsPage,
@@ -121,7 +121,7 @@ function ReviewsPage() {
       <section className="container mx-auto max-w-4xl px-4 py-16">
         <div className="text-center">
           <h1 className="font-display text-4xl md:text-5xl font-bold">Customer Reviews</h1>
-          <p className="text-muted-foreground mt-3">What our community thinks of NexusAI</p>
+          <p className="text-muted-foreground mt-3">What our community thinks of NextGen E-Learning</p>
         </div>
 
         <div className="grid sm:grid-cols-3 gap-4 mt-10">

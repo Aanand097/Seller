@@ -16,7 +16,7 @@ import esewaQr from "@/assets/esewa-qr.jpeg.asset.json";
 import { ESEWA_ACCOUNT_ID, ESEWA_ACCOUNT_NAME } from "@/lib/site-config";
 
 export const Route = createFileRoute("/cart")({
-  head: () => ({ meta: [{ title: "Cart — NexusAI" }] }),
+  head: () => ({ meta: [{ title: "Cart — NextGen E-Learning" }] }),
   component: CartPage,
 });
 

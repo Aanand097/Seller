@@ -19,7 +19,7 @@ const schema = z.object({
 });
 
 export const Route = createFileRoute("/register")({
-  head: () => ({ meta: [{ title: "Create account — NexusAI" }] }),
+  head: () => ({ meta: [{ title: "Create account — NextGen E-Learning" }] }),
   component: Register,
 });
 
@@ -59,7 +59,7 @@ function Register() {
       <section className="container mx-auto max-w-md px-4 py-16">
         <div className="glass rounded-2xl p-8">
           <h1 className="font-display text-3xl font-bold text-center">Create your account</h1>
-          <p className="text-center text-muted-foreground text-sm mt-2">Join the premium AI marketplace</p>
+          <p className="text-center text-muted-foreground text-sm mt-2">Join the premium learning marketplace</p>
           <form onSubmit={submit} className="mt-6 space-y-3">
             <div className="space-y-1.5"><Label>Full name</Label><Input required value={f.full_name} onChange={(e) => setF({ ...f, full_name: e.target.value })} /></div>
             <div className="space-y-1.5"><Label>Gmail address</Label><Input type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
