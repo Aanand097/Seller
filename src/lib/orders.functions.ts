@@ -1,10 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+const PlaceOrderInput = z.object({
+  paymentMethod: z.enum(["esewa", "manual"]).default("esewa"),
+  paymentReference: z.string().trim().max(120).optional(),
+});
 
 export const placeOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d: { paymentMethod: string; paymentProof: string }) => d)
-  .handler(async ({ data: { paymentMethod, paymentProof }, context }) => {
+  .inputValidator((input) => PlaceOrderInput.parse(input ?? { paymentMethod: "esewa" }))
+  .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
     const { data: cart, error: cartErr } = await supabase
@@ -30,9 +36,9 @@ export const placeOrder = createServerFn({ method: "POST" })
         total_price: total,
         payment_status: "pending",
         delivery_status: "pending",
-        payment_method: paymentMethod,
-        payment_proof: paymentProof,
-      } as any)
+        payment_method: data.paymentMethod,
+        payment_reference: data.paymentReference || null,
+      })
       .select()
       .single();
     if (orderErr || !order) throw new Error(orderErr?.message ?? "Order failed");
@@ -52,22 +58,34 @@ export const placeOrder = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const shortId = order.id.slice(0, 8);
     const titles = rows.map((r) => r.products!.title).join(", ");
+    const { data: admins } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "admin")
+      .order("created_at", { ascending: true });
+    const adminId = admins?.[0]?.user_id ?? null;
+
     await supabaseAdmin.from("notifications").insert({
       user_id: userId,
       title: "Order placed",
-      message: `Your order #${shortId} for ${titles} has been placed. We will verify your payment and notify you when it is delivered.`,
+      message: `Your order #${shortId} for ${titles} has been placed. Please upload your eSewa payment screenshot in chat for verification.`,
     });
 
-    const { data: admins } = await supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin");
-    if (admins && admins.length > 0) {
+    if (adminId) {
+      await supabaseAdmin.from("messages").insert({
+        sender_id: userId,
+        receiver_id: adminId,
+        order_id: order.id,
+        message: `Order #${shortId} placed for ${titles}. Payment method: ${data.paymentMethod}. Please verify the payment screenshot.`,
+      });
       await supabaseAdmin.from("notifications").insert(
-        admins.map((a) => ({
+        admins.map((a: { user_id: string }) => ({
           user_id: a.user_id,
           title: "New order received",
-          message: `Order #${shortId} placed for ${titles} via ${paymentMethod} (total $${total.toFixed(2)}).`,
+          message: `Order #${shortId} placed for ${titles} via ${data.paymentMethod} (total रु ${total.toFixed(2)}).`,
         })),
       );
     }
 
-    return { orderId: order.id };
+    return { orderId: order.id, adminId };
   });
