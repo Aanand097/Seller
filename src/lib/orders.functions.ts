@@ -3,7 +3,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const placeOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .validator((d: { paymentMethod: string; paymentProof: string }) => d)
+  .handler(async ({ data: { paymentMethod, paymentProof }, context }) => {
     const { supabase, userId } = context;
 
     const { data: cart, error: cartErr } = await supabase
@@ -24,7 +25,14 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     const { data: order, error: orderErr } = await supabase
       .from("orders")
-      .insert({ user_id: userId, total_price: total, payment_status: "paid", delivery_status: "pending" })
+      .insert({
+        user_id: userId,
+        total_price: total,
+        payment_status: "pending",
+        delivery_status: "pending",
+        payment_method: paymentMethod,
+        payment_proof: paymentProof,
+      } as any)
       .select()
       .single();
     if (orderErr || !order) throw new Error(orderErr?.message ?? "Order failed");
@@ -46,8 +54,8 @@ export const placeOrder = createServerFn({ method: "POST" })
     const titles = rows.map((r) => r.products!.title).join(", ");
     await supabaseAdmin.from("notifications").insert({
       user_id: userId,
-      title: "Order confirmed",
-      message: `Your order #${shortId} for ${titles} has been placed. We will notify you when it is delivered.`,
+      title: "Order placed",
+      message: `Your order #${shortId} for ${titles} has been placed. We will verify your payment and notify you when it is delivered.`,
     });
 
     const { data: admins } = await supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin");
@@ -56,7 +64,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         admins.map((a) => ({
           user_id: a.user_id,
           title: "New order received",
-          message: `Order #${shortId} placed for ${titles} (total $${total.toFixed(2)}).`,
+          message: `Order #${shortId} placed for ${titles} via ${paymentMethod} (total $${total.toFixed(2)}).`,
         })),
       );
     }
