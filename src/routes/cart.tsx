@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Trash2, ShoppingBag, CreditCard, Receipt } from "lucide-react";
+import { Trash2, ShoppingBag, CreditCard, QrCode } from "lucide-react";
 import { PublicLayout } from "@/components/site/PublicLayout";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,8 @@ import { placeOrder } from "@/lib/orders.functions";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import esewaQr from "@/assets/esewa-qr.jpeg.asset.json";
+import { ESEWA_ACCOUNT_ID, ESEWA_ACCOUNT_NAME } from "@/lib/site-config";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({ meta: [{ title: "Cart — NexusAI" }] }),
@@ -23,8 +25,8 @@ function CartPage() {
   const nav = useNavigate();
   const [items, setItems] = useState<any[] | null>(null);
   const [placing, setPlacing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("esewa");
-  const [paymentProof, setPaymentProof] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"esewa" | "manual">("esewa");
+  const [paymentReference, setPaymentReference] = useState("");
   const placeOrderFn = useServerFn(placeOrder);
 
   const load = async () => {
@@ -41,15 +43,11 @@ function CartPage() {
 
   const checkout = async () => {
     if (!user || !items?.length || placing) return;
-    if (!paymentProof) {
-      toast.error("Please provide payment proof (Transaction ID or Screenshot URL)");
-      return;
-    }
     setPlacing(true);
     try {
-      await placeOrderFn({ data: { paymentMethod, paymentProof } });
-      toast.success("Order placed! We will verify your payment.");
-      nav({ to: "/dashboard/orders" });
+      const result = await placeOrderFn({ data: { paymentMethod, paymentReference } });
+      toast.success("Order placed. Upload your payment screenshot in chat.");
+      nav({ to: "/dashboard/chat", search: { order: result.orderId } as any });
     } catch (e: any) {
       toast.error(e?.message ?? "Order failed");
     } finally {
@@ -100,20 +98,25 @@ function CartPage() {
                   <div>
                     <RadioGroupItem value="manual" id="manual" className="peer sr-only" />
                     <Label htmlFor="manual" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                      <span className="font-semibold">Manual / Bank</span>
+                      <span className="font-semibold">Manual</span>
                     </Label>
                   </div>
                 </RadioGroup>
 
                 <div className="mt-6 space-y-4">
-                  <div className="p-4 rounded-xl bg-accent/50 text-sm">
-                    <p className="font-bold mb-1">Payment Instructions:</p>
-                    <p>eSewa ID: 98XXXXXXXX (Name: NexusAI)</p>
-                    <p className="mt-2 text-muted-foreground">After payment, please enter the Transaction ID or upload a screenshot and paste the link below.</p>
+                  <div className="rounded-xl border bg-background p-4 text-sm">
+                    <div className="flex items-center gap-2 font-bold mb-3"><QrCode className="h-4 w-4" /> Scan eSewa QR to pay</div>
+                    <img src={esewaQr.url} alt="eSewa payment QR for NextGen E-Learning" className="mx-auto w-full max-w-[260px] rounded-lg border bg-white object-contain" />
+                    <div className="mt-3 grid gap-1 text-center">
+                      <p className="font-semibold">{ESEWA_ACCOUNT_NAME}</p>
+                      <p className="text-muted-foreground">eSewa ID: {ESEWA_ACCOUNT_ID}</p>
+                      <p className="font-bold text-base">Pay total: {formatPrice(total)}</p>
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="proof">Payment Proof (Txn ID or Link)</Label>
-                    <Input id="proof" placeholder="e.g. 52XJ8..." value={paymentProof} onChange={(e) => setPaymentProof(e.target.value)} />
+                    <Label htmlFor="reference">Transaction ID (optional)</Label>
+                    <Input id="reference" placeholder="eSewa reference ID if available" value={paymentReference} onChange={(e) => setPaymentReference(e.target.value)} />
+                    <p className="text-xs text-muted-foreground">After checkout, chat will open so you can upload the payment screenshot for admin verification.</p>
                   </div>
                 </div>
               </div>
@@ -124,7 +127,7 @@ function CartPage() {
               <div className="flex justify-between mb-2"><span>Subtotal</span><span>{formatPrice(total)}</span></div>
               <div className="flex justify-between mb-4 text-sm text-muted-foreground"><span>Tax</span><span>Included</span></div>
               <div className="flex justify-between font-bold text-lg pt-4 border-t"><span>Total</span><span className="gradient-text">{formatPrice(total)}</span></div>
-              <Button onClick={checkout} disabled={placing} size="lg" className="w-full mt-6 text-white" style={{ background: "var(--gradient-primary)" }}>{placing ? "Placing order..." : "Checkout"}</Button>
+              <Button onClick={checkout} disabled={placing} size="lg" className="w-full mt-6 text-white" style={{ background: "var(--gradient-primary)" }}>{placing ? "Creating order..." : "I paid / Continue to proof upload"}</Button>
             </div>
           </div>
         )}

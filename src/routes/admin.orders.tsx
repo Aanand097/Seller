@@ -6,8 +6,8 @@ import { formatPrice, formatDate } from "@/lib/format";
 import { toast } from "sonner";
 import { updateOrderStatus } from "@/lib/admin-orders.functions";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ExternalLink, CreditCard, User, Package } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { CreditCard, User, Package, MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/admin/orders")({ component: AdminOrders });
 
@@ -93,11 +93,10 @@ function AdminOrders() {
                 </h4>
                 <div className="text-sm">Method: <span className="font-semibold capitalize">{o.payment_method || "N/A"}</span></div>
                 <div className="text-sm mt-1">
-                  Proof: {o.payment_proof ? (
-                    <a href={o.payment_proof.startsWith('http') ? o.payment_proof : '#'} target="_blank" className="text-primary hover:underline inline-flex items-center gap-1">
-                      {o.payment_proof.slice(0, 20)}... <ExternalLink className="h-3 w-3" />
-                    </a>
-                  ) : "None"}
+                  Reference: <span className="font-mono">{o.payment_reference || "Not provided"}</span>
+                </div>
+                <div className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                  <MessageCircle className="h-3.5 w-3.5" /> Payment screenshots are verified in Admin → Chat.
                 </div>
               </div>
 
@@ -119,15 +118,17 @@ function AdminOrders() {
             <div className="p-6 bg-accent/5 border-t">
               <h4 className="text-sm font-bold mb-3">Delivery Account Details</h4>
               {editingId === o.id ? (
-                <div className="flex gap-2">
-                  <Input 
+                <div className="grid gap-2">
+                  <Textarea 
                     value={accountDetails} 
                     onChange={(e) => setAccountDetails(e.target.value)} 
-                    placeholder="Enter account credentials (email:pass)..."
-                    className="flex-1"
+                    placeholder="Enter account login, password, recovery notes, or license key..."
+                    rows={4}
                   />
-                  <Button onClick={() => update(o.id, "delivered", "paid", accountDetails)}>Deliver & Notify</Button>
-                  <Button variant="ghost" onClick={() => setEditingId(null)}>Cancel</Button>
+                  <div className="flex gap-2">
+                    <Button onClick={() => update(o.id, "delivered", "paid", accountDetails)}>Deliver & Notify</Button>
+                    <Button variant="ghost" onClick={() => setEditingId(null)}>Cancel</Button>
+                  </div>
                 </div>
               ) : (
                 <div className="flex justify-between items-center">

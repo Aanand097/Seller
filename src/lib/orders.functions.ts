@@ -79,7 +79,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         message: `Order #${shortId} placed for ${titles}. Payment method: ${data.paymentMethod}. Please verify the payment screenshot.`,
       });
       await supabaseAdmin.from("notifications").insert(
-        admins.map((a: { user_id: string }) => ({
+        (admins ?? []).map((a: { user_id: string }) => ({
           user_id: a.user_id,
           title: "New order received",
           message: `Order #${shortId} placed for ${titles} via ${data.paymentMethod} (total रु ${total.toFixed(2)}).`,

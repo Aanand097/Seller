@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { formatPrice, formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
-import { Key, CreditCard } from "lucide-react";
+import { Key, CreditCard, MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/orders")({ component: Orders });
 
@@ -63,6 +65,14 @@ function Orders() {
                   </div>
                   <div className="font-bold text-lg gradient-text">{formatPrice(Number(o.total_price))}</div>
                 </div>
+                {o.payment_status !== "paid" && (
+                  <div className="mt-4 rounded-lg border bg-accent/40 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="text-sm text-muted-foreground">Upload your eSewa payment screenshot in chat so admin can verify this order.</div>
+                    <Button asChild size="sm" variant="outline">
+                      <Link to="/dashboard/chat" search={{ order: o.id } as any}><MessageCircle className="h-4 w-4 mr-1" />Upload proof</Link>
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {o.delivery_status === "delivered" && o.account_details && (
