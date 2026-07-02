@@ -204,7 +204,9 @@ export type Database = {
           delivered_at: string | null
           delivery_status: string
           id: string
+          payment_method: string
           payment_proof_message_id: string | null
+          payment_reference: string | null
           payment_status: string
           payment_verified_at: string | null
           total_price: number
@@ -217,7 +219,9 @@ export type Database = {
           delivered_at?: string | null
           delivery_status?: string
           id?: string
+          payment_method?: string
           payment_proof_message_id?: string | null
+          payment_reference?: string | null
           payment_status?: string
           payment_verified_at?: string | null
           total_price?: number
@@ -230,7 +234,9 @@ export type Database = {
           delivered_at?: string | null
           delivery_status?: string
           id?: string
+          payment_method?: string
           payment_proof_message_id?: string | null
+          payment_reference?: string | null
           payment_status?: string
           payment_verified_at?: string | null
           total_price?: number
