@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/format";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useNavigate } from "@tanstack/react-router";
 import { buildWhatsAppUrl } from "@/lib/site-config";
@@ -35,7 +34,12 @@ export function ProductCard({ product, index = 0 }: { product: ProductRow; index
     }
     try {
       await addProductToCart(user.id, product.id);
-      toast.success(`${product.title} added to cart`);
+      toast.success(`${product.title} added to cart`, {
+        action: {
+          label: "View cart",
+          onClick: () => navigate({ to: "/cart" }),
+        },
+      });
     } catch (error: any) {
       toast.error(error?.message ?? "Could not add to cart");
     }

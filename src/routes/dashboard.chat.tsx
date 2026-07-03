@@ -319,10 +319,10 @@ function UserChat({ userId }: { userId: string }) {
   };
 
   return (
-    <div className="flex flex-col h-[75vh]">
-      <h1 className="font-display text-3xl font-bold mb-1">Chat with support</h1>
+    <div className="flex flex-col h-[calc(100dvh-14rem)] min-h-[500px] max-h-[720px]">
+      <h1 className="font-display text-2xl md:text-3xl font-bold mb-1">Chat with support</h1>
       <p className="text-xs text-muted-foreground mb-3">Send messages, upload payment screenshots (JPG/PNG/WEBP, ≤5MB). Replies arrive live.</p>
-      <div className="flex-1 rounded-2xl border bg-card p-4 overflow-y-auto space-y-2">
+      <div className="flex-1 min-h-0 rounded-2xl border bg-card p-4 overflow-y-auto space-y-2">
         {msgs.length === 0 && <p className="text-center text-muted-foreground text-sm py-8">Send a message to start the conversation.</p>}
         {msgs.map((m) => {
           const mine = m.sender_id === userId;
@@ -577,10 +577,10 @@ function AdminInbox({ adminId }: { adminId: string }) {
   }, [conversation, orders, active]);
 
   return (
-    <div>
-      <h1 className="font-display text-3xl font-bold mb-4">Support inbox</h1>
-      <div className="grid md:grid-cols-[300px_1fr] gap-4 h-[75vh]">
-        <aside className="rounded-2xl border bg-card overflow-y-auto">
+    <div className="flex flex-col h-[calc(100dvh-12rem)] min-h-[540px] max-h-[820px]">
+      <h1 className="font-display text-2xl md:text-3xl font-bold mb-4">Support inbox</h1>
+      <div className="grid md:grid-cols-[300px_1fr] gap-4 flex-1 min-h-0">
+        <aside className="rounded-2xl border bg-card overflow-y-auto min-h-0">
           {threads.length === 0 ? (
             <div className="p-6 text-center text-sm text-muted-foreground">
               <Inbox className="h-8 w-8 mx-auto mb-2 opacity-60" /> No messages yet.
@@ -623,7 +623,7 @@ function AdminInbox({ adminId }: { adminId: string }) {
           )}
         </aside>
 
-        <section className="rounded-2xl border bg-card flex flex-col">
+        <section className="rounded-2xl border bg-card flex flex-col min-h-0">
           {!active ? (
             <div className="flex-1 grid place-items-center text-sm text-muted-foreground">Select a conversation to reply.</div>
           ) : (
@@ -650,7 +650,7 @@ function AdminInbox({ adminId }: { adminId: string }) {
                 )}
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-2">
                 {conversation.map((m) => {
                   const mine = m.sender_id === adminId;
                   const prod = m.product_id ? products[m.product_id] : undefined;
