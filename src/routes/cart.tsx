@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Trash2, ShoppingBag, CreditCard, QrCode } from "lucide-react";
+import { Trash2, ShoppingBag, CreditCard, QrCode, Download } from "lucide-react";
 import { PublicLayout } from "@/components/site/PublicLayout";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -136,6 +136,13 @@ function CartPage() {
                       <p className="font-semibold">{ESEWA_ACCOUNT_NAME}</p>
                       <p className="text-muted-foreground">eSewa ID: {ESEWA_ACCOUNT_ID}</p>
                       <p className="font-bold text-base">Pay total: {formatPrice(total)}</p>
+                    </div>
+                    <div className="mt-3 flex justify-center">
+                      <Button asChild size="sm" variant="outline" type="button">
+                        <a href={esewaQr.url} download="esewa-qr.jpeg" target="_blank" rel="noopener noreferrer">
+                          <Download className="h-4 w-4 mr-2" /> Download QR
+                        </a>
+                      </Button>
                     </div>
                   </div>
                   <div className="space-y-2">
