@@ -12,7 +12,7 @@ import { placeOrder } from "@/lib/orders.functions";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import esewaQr from "@/assets/esewa-qr.jpeg.asset.json";
+import esewaQrUrl from "@/assets/esewa-qr.jpeg";
 import { ESEWA_ACCOUNT_ID, ESEWA_ACCOUNT_NAME } from "@/lib/site-config";
 import { setCartItemQuantity } from "@/lib/cart";
 
@@ -131,7 +131,7 @@ function CartPage() {
                 <div className="mt-6 space-y-4">
                   <div className="rounded-xl border bg-background p-4 text-sm">
                     <div className="flex items-center gap-2 font-bold mb-3"><QrCode className="h-4 w-4" /> Scan eSewa QR to pay</div>
-                    <img src={esewaQr.url} alt="eSewa payment QR for NextGen E-Learning" className="mx-auto w-full max-w-[260px] rounded-lg border bg-white object-contain" />
+                    <img src={esewaQrUrl} alt="eSewa payment QR for NextGen E-Learning" className="mx-auto w-full max-w-[260px] rounded-lg border bg-white object-contain" />
                     <div className="mt-3 grid gap-1 text-center">
                       <p className="font-semibold">{ESEWA_ACCOUNT_NAME}</p>
                       <p className="text-muted-foreground">eSewa ID: {ESEWA_ACCOUNT_ID}</p>
@@ -139,7 +139,7 @@ function CartPage() {
                     </div>
                     <div className="mt-3 flex justify-center">
                       <Button asChild size="sm" variant="outline" type="button">
-                        <a href={esewaQr.url} download="esewa-qr.jpeg" target="_blank" rel="noopener noreferrer">
+                        <a href={esewaQrUrl} download="esewa-qr.jpeg" target="_blank" rel="noopener noreferrer">
                           <Download className="h-4 w-4 mr-2" /> Download QR
                         </a>
                       </Button>
