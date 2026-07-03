@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ShoppingCart, Bell, User as UserIcon, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
@@ -6,6 +6,7 @@ import { Logo } from "./Logo";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,7 @@ const NAV = [
 export function Header() {
   const { user, profile, isAdmin, signOut } = useAuth();
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [unread, setUnread] = useState(0);
@@ -49,12 +51,27 @@ export function Header() {
     const ch = supabase
       .channel(`hdr-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "cart_items", filter: `user_id=eq.${user.id}` }, load)
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, (payload: any) => {
+        void load();
+        if (payload.eventType === "INSERT" && payload.new) {
+          const n = payload.new as { title?: string; message?: string };
+          toast(n.title ?? "New notification", {
+            description: n.message?.slice(0, 120),
+            action: { label: "View", onClick: () => navigate({ to: "/dashboard/notifications" }) },
+          });
+          if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+            new Notification(n.title ?? "New notification", { body: n.message?.slice(0, 120) });
+          }
+        }
+      })
       .subscribe();
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      void Notification.requestPermission();
+    }
     return () => {
       void supabase.removeChannel(ch);
     };
-  }, [user]);
+  }, [user, navigate]);
 
   return (
     <header className="sticky top-0 z-50 w-full">
