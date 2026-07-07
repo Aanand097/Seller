@@ -16,17 +16,11 @@ async function assertAdmin(supabase: any, userId: string) {
 export const getSupportAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
-      .from("user_roles")
-      .select("user_id")
-      .eq("role", "admin")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
+    const { data, error } = await context.supabase.rpc("get_first_admin_id");
     if (error) throw new Error(error.message);
-    if (!data?.user_id) throw new Error("Support admin is not configured yet.");
-    return { adminId: data.user_id, userId: context.userId };
+    const adminId = data as unknown as string | null;
+    if (!adminId) throw new Error("Support admin is not configured yet.");
+    return { adminId, userId: context.userId };
   });
 
 const VerifyPaymentInput = z.object({
@@ -39,9 +33,12 @@ export const verifyPaymentProof = createServerFn({ method: "POST" })
   .inputValidator((input) => VerifyPaymentInput.parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Caller is an admin — RLS ("Admins manage notifications", "Admins update orders",
+    // "Recipients update seen", "Users send messages") allows all of these writes
+    // via the authenticated client, so no service role key is required.
+    const sb = context.supabase;
 
-    const { data: message, error: msgErr } = await supabaseAdmin
+    const { data: message, error: msgErr } = await sb
       .from("messages")
       .select("id, sender_id, receiver_id, order_id, payment_proof")
       .eq("id", data.messageId)
@@ -49,7 +46,7 @@ export const verifyPaymentProof = createServerFn({ method: "POST" })
     if (msgErr) throw new Error(msgErr.message);
     if (!message?.payment_proof) throw new Error("This message is not a payment proof.");
 
-    const { error: updateMsgErr } = await supabaseAdmin
+    const { error: updateMsgErr } = await sb
       .from("messages")
       .update({ payment_status: data.status })
       .eq("id", data.messageId);
@@ -57,7 +54,7 @@ export const verifyPaymentProof = createServerFn({ method: "POST" })
 
     if (message.order_id) {
       const approved = data.status === "approved";
-      const { data: order, error: orderErr } = await supabaseAdmin
+      const { data: order, error: orderErr } = await sb
         .from("orders")
         .update({
           payment_status: approved ? "paid" : "failed",
@@ -70,7 +67,7 @@ export const verifyPaymentProof = createServerFn({ method: "POST" })
         .single();
       if (orderErr) throw new Error(orderErr.message);
 
-      await supabaseAdmin.from("notifications").insert({
+      await sb.from("notifications").insert({
         user_id: order.user_id,
         title: approved ? "Payment approved" : "Payment rejected",
         message: approved
@@ -78,7 +75,7 @@ export const verifyPaymentProof = createServerFn({ method: "POST" })
           : `Payment proof for order #${order.id.slice(0, 8)} was rejected. Please upload a clear screenshot again.`,
       });
 
-      await supabaseAdmin.from("messages").insert({
+      await sb.from("messages").insert({
         sender_id: context.userId,
         receiver_id: order.user_id,
         order_id: order.id,
