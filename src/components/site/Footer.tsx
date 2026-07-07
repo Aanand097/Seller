@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Mail } from "lucide-react";
 import { Logo } from "./Logo";
+import { CONTACT_EMAIL } from "@/lib/site-config";
 
 export function Footer() {
   return (
@@ -12,7 +13,7 @@ export function Footer() {
             NextGen E-Learning — the modern marketplace for premium learning subscriptions and AI-powered study tools. Learn faster, smarter, and together.
           </p>
           <div className="flex items-center gap-3">
-            <a href="mailto:support@nextgen-elearning.com" className="h-9 w-9 grid place-items-center rounded-lg border bg-white hover:bg-accent transition" aria-label="Email support">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="h-9 w-9 grid place-items-center rounded-lg border bg-white hover:bg-accent transition" aria-label="Email support">
               <Mail className="h-4 w-4" />
             </a>
           </div>

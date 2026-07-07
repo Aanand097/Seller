@@ -30,7 +30,7 @@ type ReviewRow = {
   created_at: string;
 };
 
-type Author = { id: string; full_name: string | null; avatar_url: string | null };
+type Author = { id: string; full_name: string | null; avatar_url: string | null; email: string | null };
 
 function Stars({ value, onChange }: { value: number; onChange?: (n: number) => void }) {
   return (
@@ -70,7 +70,7 @@ function ReviewsPage() {
     setUserCount(count ?? 0);
     const ids = Array.from(new Set(list.map((r) => r.user_id)));
     if (ids.length) {
-      const { data: pf } = await supabase.from("profiles").select("id,full_name,avatar_url").in("id", ids);
+      const { data: pf } = await supabase.from("profiles").select("id,full_name,avatar_url,email").in("id", ids);
       const map: Record<string, Author> = {};
       (pf ?? []).forEach((p: any) => { map[p.id] = p; });
       setAuthors(map);
@@ -175,7 +175,10 @@ function ReviewsPage() {
           )}
           {reviews.map((r) => {
             const a = authors[r.user_id];
-            const name = a?.full_name ?? "Anonymous";
+            const name =
+              (a?.full_name && a.full_name.trim()) ||
+              (a?.email ? a.email.split("@")[0] : null) ||
+              "User";
             const isOwn = user?.id === r.user_id;
             return (
               <div key={r.id} className="rounded-2xl border bg-card p-5">

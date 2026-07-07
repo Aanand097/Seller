@@ -13,7 +13,7 @@ const PAGES: Record<string, Page> = {
       { heading: "Information we collect", body: "Account details (name, email, phone, age, address, avatar), order history, support messages, reviews, and basic device/usage analytics." },
       { heading: "How we use your data", body: "To deliver your courses and subscriptions, process payments, provide customer support, send important account notifications, and improve the platform." },
       { heading: "Sharing", body: "We never sell your data. We share only with processors that are required to deliver the service (hosting, payment processing, email)." },
-      { heading: "Your rights", body: "You may request access, correction or deletion of your data at any time by contacting support@nextgen-elearning.com. Admins can also delete your account on request." },
+      { heading: "Your rights", body: "You may request access, correction or deletion of your data at any time by contacting unlimatesubscription00@gmail.com. Admins can also delete your account on request." },
       { heading: "Retention", body: "We keep your data for as long as your account is active. After deletion, backups are purged within 30 days." },
     ],
   },
@@ -36,7 +36,7 @@ const PAGES: Record<string, Page> = {
     sections: [
       { heading: "Pricing", body: "Prices are shown in NPR (रु) on every product page and at checkout. Discounted prices reflect the final price you pay; the original price is shown with a strike-through. Taxes, where applicable, are included. Prices may change without notice but orders already placed are honoured at the price shown at the time of purchase." },
       { heading: "Refund window", body: "You can request a full refund within 24 hours of purchase if the subscription cannot be activated or differs materially from its description." },
-      { heading: "How to request", body: "Open the in-app Chat with support or email support@nextgen-elearning.com with your order ID. Refunds are returned to the original payment method within 5–10 business days." },
+      { heading: "How to request", body: "Open the in-app Chat with support or email unlimatesubscription00@gmail.com with your order ID. Refunds are returned to the original payment method within 5–10 business days." },
       { heading: "Non-refundable cases", body: "Refunds are not granted for change of mind after a credential has been delivered and used, or where abuse / fraud is detected." },
       { heading: "Order disputes", body: "Admins review every dispute manually. While a dispute is open, the order is marked as 'scam_review' and access may be paused until resolved." },
     ],
