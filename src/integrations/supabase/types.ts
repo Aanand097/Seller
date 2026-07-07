@@ -456,7 +456,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_first_admin_id: { Args: never; Returns: string }
+      notify_admins: {
+        Args: { _message: string; _title: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
