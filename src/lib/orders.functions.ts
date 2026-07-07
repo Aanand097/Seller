@@ -54,38 +54,33 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     await supabase.from("cart_items").delete().eq("user_id", userId);
 
-    // Use admin client to write notifications (RLS: only admins can insert).
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Route notifications via SECURITY DEFINER RPCs so no service role key is required.
     const shortId = order.id.slice(0, 8);
     const titles = rows.map((r) => r.products!.title).join(", ");
-    const { data: admins } = await supabaseAdmin
-      .from("user_roles")
-      .select("user_id")
-      .eq("role", "admin")
-      .order("created_at", { ascending: true });
-    const adminId = admins?.[0]?.user_id ?? null;
 
-    await supabaseAdmin.from("notifications").insert({
+    // Insert own "order placed" notification (RLS allows: auth.uid() = user_id).
+    await supabase.from("notifications").insert({
       user_id: userId,
       title: "Order placed",
       message: `Your order #${shortId} for ${titles} has been placed. Please upload your eSewa payment screenshot in chat for verification.`,
     });
 
+    // Find the first admin and open a chat thread + notify all admins.
+    const { data: adminId } = await supabase.rpc("get_first_admin_id");
     if (adminId) {
-      await supabaseAdmin.from("messages").insert({
+      await supabase.from("messages").insert({
         sender_id: userId,
-        receiver_id: adminId,
+        receiver_id: adminId as unknown as string,
         order_id: order.id,
         message: `Order #${shortId} placed for ${titles}. Payment method: ${data.paymentMethod}. Please verify the payment screenshot.`,
       });
-      await supabaseAdmin.from("notifications").insert(
-        (admins ?? []).map((a: { user_id: string }) => ({
-          user_id: a.user_id,
-          title: "New order received",
-          message: `Order #${shortId} placed for ${titles} via ${data.paymentMethod} (total रु ${total.toFixed(2)}).`,
-        })),
-      );
     }
+    try {
+      await supabase.rpc("notify_admins", {
+        _title: "New order received",
+        _message: `Order #${shortId} placed for ${titles} via ${data.paymentMethod} (total रु ${total.toFixed(2)}).`,
+      });
+    } catch { /* non-fatal */ }
 
-    return { orderId: order.id, adminId };
+    return { orderId: order.id, adminId: (adminId as unknown as string) ?? null };
   });

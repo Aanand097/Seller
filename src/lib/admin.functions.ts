@@ -21,6 +21,9 @@ export const setUserBan = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     if (data.userId === context.userId) throw new Error("You cannot ban yourself");
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Banning users requires SUPABASE_SERVICE_ROLE_KEY to be configured on the server.");
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const ban_duration = data.banned ? "876000h" : "none"; // ~100 years or lift ban
     const { error: aErr } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
@@ -41,6 +44,9 @@ export const deleteUser = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     if (data.userId === context.userId) throw new Error("You cannot delete yourself");
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Deleting users requires SUPABASE_SERVICE_ROLE_KEY to be configured on the server.");
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
     if (error) throw new Error(error.message);

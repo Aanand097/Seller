@@ -33,20 +33,20 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
       .single();
     if (error || !order) throw new Error(error?.message ?? "Update failed");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    
+    // Caller is an admin — RLS "Admins manage notifications" + "Users send messages"
+    // allows these inserts via the authenticated client (no service role required).
     let message = `Your order #${order.id.slice(0, 8)} status was updated to "${data.status}".`;
     if (data.status === "delivered" && order.account_details) {
       message = `Your order #${order.id.slice(0, 8)} has been delivered. Account details are available in your orders page.`;
     }
 
-    await supabaseAdmin.from("notifications").insert({
+    await supabase.from("notifications").insert({
       user_id: order.user_id,
       title: `Order ${data.status}`,
       message: message,
     });
     if (data.status === "delivered" && order.account_details) {
-      await supabaseAdmin.from("messages").insert({
+      await supabase.from("messages").insert({
         sender_id: userId,
         receiver_id: order.user_id,
         order_id: order.id,
