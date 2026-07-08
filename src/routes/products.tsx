@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { PublicLayout } from "@/components/site/PublicLayout";
 import { ProductCard, type ProductRow } from "@/components/site/ProductCard";
@@ -38,8 +38,13 @@ export const Route = createFileRoute("/products")({
 });
 
 function ProductsPage() {
+  const qc = useQueryClient();
   const { data: products } = useQuery(productsQuery);
   const { data: cats = [] } = useQuery(categoriesQuery);
+  useEffect(() => {
+    if (!products) return;
+    for (const p of products) qc.setQueryData(["product", p.id], p);
+  }, [products, qc]);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string | null>(null);
   const [sort, setSort] = useState<"new" | "low" | "high">("new");
