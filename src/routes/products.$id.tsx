@@ -31,6 +31,8 @@ const productQuery = (id: string) => queryOptions({
   },
   staleTime: 5 * 60_000,
   gcTime: 30 * 60_000,
+  retry: 2,
+  retryDelay: (a: number) => Math.min(1000 * 2 ** a, 5000),
 });
 
 const relatedQuery = (categoryId: string | null, excludeId: string) => queryOptions({
