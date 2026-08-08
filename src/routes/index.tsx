@@ -26,14 +26,31 @@ function Index() {
   const [categories, setCategories] = useState<{ id: string; name: string; icon: string | null }[]>([]);
 
   useEffect(() => {
-    void supabase
-      .from("products")
-      .select("*, categories(name)")
-      .eq("status", "active")
-      .eq("featured", true)
-      .limit(6)
-      .then(({ data }) => setProducts((data as ProductRow[]) ?? []));
-    void supabase.from("categories").select("id,name,icon").then(({ data }) => setCategories(data ?? []));
+    let alive = true;
+    void (async () => {
+      try {
+        const data = await withRetry(() =>
+          supabase
+            .from("products")
+            .select("*, categories(name)")
+            .eq("status", "active")
+            .eq("featured", true)
+            .limit(6),
+        );
+        if (alive) setProducts((data as ProductRow[]) ?? []);
+      } catch {
+        if (alive) setProducts([]);
+      }
+      try {
+        const cats = await withRetry(() => supabase.from("categories").select("id,name,icon"));
+        if (alive) setCategories((cats as { id: string; name: string; icon: string | null }[]) ?? []);
+      } catch {
+        /* keep empty */
+      }
+    })();
+    return () => {
+      alive = false;
+    };
   }, []);
 
   return (
