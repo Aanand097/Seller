@@ -28,7 +28,7 @@ const categoriesQuery = queryOptions({
   gcTime: 60 * 60_000,
 });
 
-export const Route = createFileRoute("/products")({
+export const Route = createFileRoute("/products/")({
   head: () => ({ meta: [{ title: "Courses & AI Tools — NextGen E-Learning" }, { name: "description", content: "Browse premium courses and AI learning subscriptions across every category." }] }),
   loader: ({ context }) => {
     void context.queryClient.prefetchQuery(productsQuery);
