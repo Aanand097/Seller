@@ -26,7 +26,7 @@ const categoriesQuery = queryOptions({
   queryKey: ["categories"],
   queryFn: async () => {
     const data = await withRetry(() => supabase.from("categories").select("id,name"));
-    return data ?? [];
+    return (data as { id: string; name: string }[]) ?? [];
   },
   staleTime: 30 * 60_000,
   gcTime: 60 * 60_000,
