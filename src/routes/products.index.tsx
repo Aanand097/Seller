@@ -1,31 +1,36 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search } from "lucide-react";
+import { Search, RefreshCw } from "lucide-react";
 import { PublicLayout } from "@/components/site/PublicLayout";
 import { ProductCard, type ProductRow } from "@/components/site/ProductCard";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { withRetry } from "@/lib/db-retry";
 
 const productsQuery = queryOptions({
   queryKey: ["products", "active"],
   queryFn: async () => {
-    const { data } = await supabase.from("products").select("*, categories(name)").eq("status", "active");
+    const data = await withRetry(() => supabase.from("products").select("*, categories(name)").eq("status", "active"));
     return (data as ProductRow[]) ?? [];
   },
   staleTime: 5 * 60_000,
   gcTime: 30 * 60_000,
+  retry: 2,
+  retryDelay: (a: number) => Math.min(1000 * 2 ** a, 5000),
 });
 
 const categoriesQuery = queryOptions({
   queryKey: ["categories"],
   queryFn: async () => {
-    const { data } = await supabase.from("categories").select("id,name");
+    const data = await withRetry(() => supabase.from("categories").select("id,name"));
     return data ?? [];
   },
   staleTime: 30 * 60_000,
   gcTime: 60 * 60_000,
+  retry: 2,
 });
 
 export const Route = createFileRoute("/products/")({
@@ -39,7 +44,7 @@ export const Route = createFileRoute("/products/")({
 
 function ProductsPage() {
   const qc = useQueryClient();
-  const { data: products } = useQuery(productsQuery);
+  const { data: products, isError, isFetching, refetch } = useQuery(productsQuery);
   const { data: cats = [] } = useQuery(categoriesQuery);
   useEffect(() => {
     if (!products) return;
@@ -83,7 +88,17 @@ function ProductsPage() {
           </select>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered === null
+          {isError
+            ? (
+              <div className="col-span-full text-center py-20 space-y-4">
+                <p className="text-muted-foreground">Couldn’t load products right now. The server may have been sleeping.</p>
+                <Button onClick={() => void refetch()} disabled={isFetching} variant="outline">
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
+                  Try again
+                </Button>
+              </div>
+            )
+            : filtered === null
             ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-80 rounded-2xl" />)
             : filtered.length === 0
               ? <div className="col-span-full text-center py-20 text-muted-foreground">No products found.</div>
