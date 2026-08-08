@@ -8,6 +8,7 @@ import { ProductCard, type ProductRow } from "@/components/site/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { withRetry } from "@/lib/db-retry";
 
 export const Route = createFileRoute("/")({
   head: () => ({
