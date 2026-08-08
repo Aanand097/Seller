@@ -6,8 +6,10 @@
  * previously made lists render as "empty". Retrying with backoff makes the
  * page recover on its own instead of showing no products.
  */
+type SupabaseResult<T> = { data: T | null; error: { message: string } | null };
+
 export async function withRetry<T>(
-  fn: () => Promise<{ data: T | null; error: { message: string } | null }>,
+  fn: () => PromiseLike<SupabaseResult<T>>,
   attempts = 4,
 ): Promise<T | null> {
   let lastError: unknown = null;
@@ -19,7 +21,7 @@ export async function withRetry<T>(
     } catch (e) {
       lastError = e;
     }
-    // 400ms, 900ms, 1900ms — enough for a sleeping backend to wake up.
+    // 500ms, 900ms, 1700ms — enough for a sleeping backend to wake up.
     await new Promise((r) => setTimeout(r, 400 * 2 ** i + 100));
   }
   throw lastError instanceof Error ? lastError : new Error((lastError as any)?.message ?? "Database unavailable");
