@@ -47,10 +47,12 @@ const relatedQuery = (categoryId: string | null, excludeId: string) => queryOpti
 });
 
 export const Route = createFileRoute("/products/$id")({
-  loader: async ({ context, params }) => {
-    const p = await context.queryClient.ensureQueryData(productQuery(params.id));
-    if (!p) throw notFound();
+  // Non-blocking: navigation happens instantly, data streams in via Suspense.
+  loader: ({ context, params }) => {
+    void context.queryClient.prefetchQuery(productQuery(params.id));
   },
+  pendingMs: 0,
+  pendingMinMs: 0,
   head: () => ({
     meta: [
       { title: "Product — NextGen E-Learning" },
