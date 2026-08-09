@@ -6,6 +6,7 @@ import { formatPrice } from "@/lib/format";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { buildWhatsAppUrl } from "@/lib/site-config";
 import { addProductToCart } from "@/lib/cart";
 
@@ -24,6 +25,10 @@ export type ProductRow = {
 export function ProductCard({ product, index = 0 }: { product: ProductRow; index?: number }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const router = useRouter();
+  const warm = () => {
+    void router.preloadRoute({ to: "/products/$id", params: { id: product.id } });
+  };
 
   const addToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -56,6 +61,9 @@ export function ProductCard({ product, index = 0 }: { product: ProductRow; index
       <div
         role="link"
         tabIndex={0}
+        onMouseEnter={warm}
+        onFocus={warm}
+        onTouchStart={warm}
         onClick={() => navigate({ to: "/products/$id", params: { id: product.id } })}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
