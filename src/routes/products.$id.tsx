@@ -99,7 +99,7 @@ function ProductDetail() {
   const [tab, setTab] = useState<"desc" | "features" | "howto">("desc");
   const [qty, setQty] = useState(1);
 
-  if (!p) return null;
+  if (!p) throw notFound();
 
   const priceLabel = formatPrice(Number(p.price));
   const compareAt = Number(p.price) * 1.25;
