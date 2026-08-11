@@ -19,10 +19,12 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Discover and buy the world's best AI subscriptions in one premium marketplace." },
     ],
   }),
+  loader: ({ context }) => {
+    void context.queryClient.prefetchQuery(productsQuery);
+    void context.queryClient.prefetchQuery(categoriesQuery);
+  },
   component: Index,
 });
-
-// Prime the shared cache during route load (no blocking).
 
 function Index() {
   const qc = useQueryClient();
