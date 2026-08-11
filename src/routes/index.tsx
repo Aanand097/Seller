@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Sparkles, Zap, Shield, MessageSquare, ArrowRight, Star, Check } from "lucide-react";
 import { PublicLayout } from "@/components/site/PublicLayout";
 import { ProductCard, type ProductRow } from "@/components/site/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
-import { withRetry } from "@/lib/db-retry";
+import { productsQuery, categoriesQuery } from "@/lib/product-queries";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,36 +23,21 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const [products, setProducts] = useState<ProductRow[] | null>(null);
-  const [categories, setCategories] = useState<{ id: string; name: string; icon: string | null }[]>([]);
+  const qc = useQueryClient();
+  // Same cache entry as /products — featured items are derived, not refetched.
+  const { data: all, isPending } = useQuery({
+    ...productsQuery,
+    select: (rows: ProductRow[]) => rows.filter((p) => p.featured).slice(0, 6),
+  });
+  const { data: categories = [] } = useQuery(categoriesQuery);
+  const products: ProductRow[] | null = isPending ? null : (all ?? []);
 
   useEffect(() => {
-    let alive = true;
-    void (async () => {
-      try {
-        const data = await withRetry(() =>
-          supabase
-            .from("products")
-            .select("*, categories(name)")
-            .eq("status", "active")
-            .eq("featured", true)
-            .limit(6),
-        );
-        if (alive) setProducts((data as ProductRow[]) ?? []);
-      } catch {
-        if (alive) setProducts([]);
-      }
-      try {
-        const cats = await withRetry(() => supabase.from("categories").select("id,name,icon"));
-        if (alive) setCategories((cats as { id: string; name: string; icon: string | null }[]) ?? []);
-      } catch {
-        /* keep empty */
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
+    if (!products) return;
+    for (const p of products) {
+      if (!qc.getQueryData(["product", p.id])) qc.setQueryData(["product", p.id], p);
+    }
+  }, [products, qc]);
 
   return (
     <PublicLayout>
