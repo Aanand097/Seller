@@ -22,6 +22,8 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+// Prime the shared cache during route load (no blocking).
+
 function Index() {
   const qc = useQueryClient();
   // Same cache entry as /products — featured items are derived, not refetched.
