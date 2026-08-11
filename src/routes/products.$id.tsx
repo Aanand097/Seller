@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, notFound } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useSuspenseQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import {
   Sparkles, ShoppingCart, MessageCircle, Check, ChevronRight,
   Zap, ShieldCheck, Clock, Headphones, Share2, Heart, Star,
@@ -17,34 +17,7 @@ import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 import { buildWhatsAppUrl } from "@/lib/site-config";
 import { addProductToCart } from "@/lib/cart";
-
-const productQuery = (id: string) => queryOptions({
-  queryKey: ["product", id],
-  queryFn: async () => {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*, categories(id,name)")
-      .eq("id", id)
-      .maybeSingle();
-    if (error) throw error;
-    return data;
-  },
-  staleTime: 5 * 60_000,
-  gcTime: 30 * 60_000,
-  retry: 2,
-  retryDelay: (a: number) => Math.min(1000 * 2 ** a, 5000),
-});
-
-const relatedQuery = (categoryId: string | null, excludeId: string) => queryOptions({
-  queryKey: ["products", "related", categoryId, excludeId],
-  queryFn: async () => {
-    let q = supabase.from("products").select("*, categories(name)").eq("status", "active").neq("id", excludeId).limit(4);
-    if (categoryId) q = q.eq("category_id", categoryId);
-    const { data } = await q;
-    return (data as ProductRow[]) ?? [];
-  },
-  staleTime: 5 * 60_000,
-});
+import { productQuery, relatedQuery } from "@/lib/product-queries";
 
 export const Route = createFileRoute("/products/$id")({
   // Non-blocking: navigation happens instantly, data streams in via Suspense.
@@ -96,6 +69,13 @@ function ProductDetail() {
   const navigate = useNavigate();
   const { data: p } = useSuspenseQuery(productQuery(id));
   const { data: related = [] } = useQuery(relatedQuery(p?.category_id ?? null, id));
+  const qc = useQueryClient();
+  useEffect(() => {
+    // Warm sibling detail caches so "You may also like" opens instantly too.
+    for (const r of related) {
+      if (!qc.getQueryData(["product", r.id])) qc.setQueryData(["product", r.id], r);
+    }
+  }, [related, qc]);
   const [tab, setTab] = useState<"desc" | "features" | "howto">("desc");
   const [qty, setQty] = useState(1);
 
