@@ -1,37 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Search, RefreshCw } from "lucide-react";
 import { PublicLayout } from "@/components/site/PublicLayout";
 import { ProductCard, type ProductRow } from "@/components/site/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
-import { withRetry } from "@/lib/db-retry";
-
-const productsQuery = queryOptions({
-  queryKey: ["products", "active"],
-  queryFn: async () => {
-    const data = await withRetry(() => supabase.from("products").select("*, categories(name)").eq("status", "active"));
-    return (data as ProductRow[]) ?? [];
-  },
-  staleTime: 5 * 60_000,
-  gcTime: 30 * 60_000,
-  retry: 2,
-  retryDelay: (a: number) => Math.min(1000 * 2 ** a, 5000),
-});
-
-const categoriesQuery = queryOptions({
-  queryKey: ["categories"],
-  queryFn: async () => {
-    const data = await withRetry(() => supabase.from("categories").select("id,name"));
-    return (data as { id: string; name: string }[]) ?? [];
-  },
-  staleTime: 30 * 60_000,
-  gcTime: 60 * 60_000,
-  retry: 2,
-});
+import { productsQuery, categoriesQuery } from "@/lib/product-queries";
 
 export const Route = createFileRoute("/products/")({
   head: () => ({ meta: [{ title: "Courses & AI Tools — NextGen E-Learning" }, { name: "description", content: "Browse premium courses and AI learning subscriptions across every category." }] }),
@@ -48,7 +24,10 @@ function ProductsPage() {
   const { data: cats = [] } = useQuery(categoriesQuery);
   useEffect(() => {
     if (!products) return;
-    for (const p of products) qc.setQueryData(["product", p.id], p);
+    // Seed the detail cache so opening a product renders from cache instantly.
+    for (const p of products) {
+      if (!qc.getQueryData(["product", p.id])) qc.setQueryData(["product", p.id], p);
+    }
   }, [products, qc]);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string | null>(null);
