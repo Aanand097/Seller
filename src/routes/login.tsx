@@ -11,7 +11,8 @@ import { z } from "zod";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in — NextGen E-Learning" }] }),
-  validateSearch: (s: Record<string, unknown>) => ({ redirect: typeof s.redirect === "string" ? s.redirect : undefined }),
+  validateSearch: (s: Record<string, unknown>): { redirect?: string } =>
+    typeof s.redirect === "string" ? { redirect: s.redirect } : {},
   component: Login,
 });
 

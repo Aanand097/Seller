@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Trash2, ShoppingBag, CreditCard, QrCode, Download } from "lucide-react";
 import { PublicLayout } from "@/components/site/PublicLayout";
@@ -15,26 +16,30 @@ import { Input } from "@/components/ui/input";
 import esewaQrUrl from "@/assets/esewa-qr.jpeg";
 import { ESEWA_ACCOUNT_ID, ESEWA_ACCOUNT_NAME } from "@/lib/site-config";
 import { setCartItemQuantity } from "@/lib/cart";
+import { cartQuery, plansQuery } from "@/lib/checkout-queries";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({ meta: [{ title: "Cart — NextGen E-Learning" }] }),
+  loader: ({ context }) => {
+    // Prime cart lines, pricing and plan/terms data so checkout renders instantly.
+    void context.queryClient.prefetchQuery(cartQuery);
+    void context.queryClient.prefetchQuery(plansQuery);
+  },
   component: CartPage,
 });
 
 function CartPage() {
   const { user, loading } = useAuth();
   const nav = useNavigate();
-  const [items, setItems] = useState<any[] | null>(null);
+  const qc = useQueryClient();
+  const { data: items = null } = useQuery({ ...cartQuery, enabled: !loading });
+  const { data: plans = [] } = useQuery(plansQuery);
   const [placing, setPlacing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"esewa" | "manual">("esewa");
   const [paymentReference, setPaymentReference] = useState("");
   const placeOrderFn = useServerFn(placeOrder);
 
-  const load = async () => {
-    if (!user) return setItems([]);
-    const { data } = await supabase.from("cart_items").select("*, products(*)").eq("user_id", user.id);
-    setItems(data ?? []);
-  };
+  const load = () => qc.invalidateQueries({ queryKey: cartQuery.queryKey });
   useEffect(() => {
     if (loading) return;
     void load();
@@ -150,6 +155,22 @@ function CartPage() {
                     <Input id="reference" placeholder="eSewa reference ID if available" value={paymentReference} onChange={(e) => setPaymentReference(e.target.value)} />
                     <p className="text-xs text-muted-foreground">After checkout, chat will open so you can upload the payment screenshot for admin verification.</p>
                   </div>
+                  {plans.length > 0 && (
+                    <div className="rounded-xl border bg-background p-4 text-sm">
+                      <div className="font-bold mb-2">Subscription plans & terms</div>
+                      <ul className="grid gap-1">
+                        {plans.map((p) => (
+                          <li key={p.duration} className="flex justify-between gap-3">
+                            <span className="text-muted-foreground">{p.duration}</span>
+                            <span className="font-semibold">
+                              {p.minPrice === p.maxPrice ? formatPrice(p.minPrice) : `${formatPrice(p.minPrice)} – ${formatPrice(p.maxPrice)}`}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-2 text-xs text-muted-foreground">Prices are inclusive of tax. Accounts are delivered after admin verifies your payment.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
