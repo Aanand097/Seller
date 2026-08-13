@@ -92,7 +92,7 @@ function AdminProducts() {
         <h1 className="font-display text-3xl font-bold">Products</h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button onClick={() => setEdit(null)} className="text-white" style={{ background: "var(--gradient-primary)" }}><Plus className="h-4 w-4 mr-1" />Add product</Button></DialogTrigger>
-          <DialogContent>
+          <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader><DialogTitle>{edit ? "Edit" : "New"} product</DialogTitle></DialogHeader>
             <form onSubmit={save} className="space-y-3">
               <div className="space-y-1.5"><Label>Title</Label><Input name="title" required defaultValue={edit?.title ?? ""} /></div>
@@ -161,9 +161,9 @@ function AdminProducts() {
       </div>
       <div className="rounded-2xl border bg-card divide-y">
         {list.map((p) => (
-          <div key={p.id} className="p-4 flex items-center gap-4">
+          <div key={p.id} className="p-4 flex flex-wrap items-center gap-3 sm:gap-4">
             <div className="h-10 w-10 rounded-lg bg-accent grid place-items-center font-bold text-primary">{p.title[0]}</div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-[8rem]">
               <div className="font-semibold">{p.title}</div>
               <div className="text-xs text-muted-foreground">{p.categories?.name ?? "Uncategorized"}{p.featured && " · ★ Featured"}</div>
             </div>
