@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { formatPrice, formatDate } from "@/lib/format";
@@ -7,27 +8,29 @@ import { Badge } from "@/components/ui/badge";
 import { Key, CreditCard, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
+import { ordersQuery } from "@/lib/checkout-queries";
 
-export const Route = createFileRoute("/dashboard/orders")({ component: Orders });
+export const Route = createFileRoute("/dashboard/orders")({
+  loader: ({ context }) => {
+    void context.queryClient.prefetchQuery(ordersQuery);
+  },
+  component: Orders,
+});
 
 function Orders() {
   const { user } = useAuth();
-  const [orders, setOrders] = useState<any[] | null>(null);
-  
+  const qc = useQueryClient();
+  const { data: orders = null } = useQuery(ordersQuery);
+
   useEffect(() => {
     if (!user) return;
-    const load = () => void supabase
-      .from("orders")
-      .select("*, order_items(*, products(title))")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => setOrders(data ?? []));
-    load();
+    const load = () => void qc.invalidateQueries({ queryKey: ordersQuery.queryKey });
     const ch = supabase
       .channel(`orders-page-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${user.id}` }, load)
       .subscribe();
     return () => { void supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   return (
