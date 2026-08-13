@@ -161,9 +161,9 @@ function AdminProducts() {
       </div>
       <div className="rounded-2xl border bg-card divide-y">
         {list.map((p) => (
-          <div key={p.id} className="p-4 flex items-center gap-4">
+          <div key={p.id} className="p-4 flex flex-wrap items-center gap-3 sm:gap-4">
             <div className="h-10 w-10 rounded-lg bg-accent grid place-items-center font-bold text-primary">{p.title[0]}</div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-[8rem]">
               <div className="font-semibold">{p.title}</div>
               <div className="text-xs text-muted-foreground">{p.categories?.name ?? "Uncategorized"}{p.featured && " · ★ Featured"}</div>
             </div>
