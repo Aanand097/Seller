@@ -231,11 +231,22 @@ function ProductDetail() {
             </div>
             <div className="rounded-2xl border bg-card p-5">
               <div className="font-semibold mb-3">Warranty</div>
-              <div className="space-y-3 text-sm">
-                <div className="flex gap-3"><BadgeCheck className="h-5 w-5 text-emerald-600 shrink-0" /><div><div className="font-medium">100% genuine</div><div className="text-muted-foreground text-xs">Verified premium account</div></div></div>
-                <div className="flex gap-3"><RefreshCw className="h-5 w-5 text-emerald-600 shrink-0" /><div><div className="font-medium">Free replacement</div><div className="text-muted-foreground text-xs">If it stops working during duration</div></div></div>
-                <div className="flex gap-3"><ShieldCheck className="h-5 w-5 text-emerald-600 shrink-0" /><div><div className="font-medium">Secure checkout</div><div className="text-muted-foreground text-xs">Your data stays private</div></div></div>
-              </div>
+              {warrantyPoints.length > 0 ? (
+                <ul className="space-y-3 text-sm">
+                  {warrantyPoints.map((line, i) => (
+                    <li key={i} className="flex gap-3">
+                      <BadgeCheck className="h-5 w-5 text-emerald-600 shrink-0" />
+                      <span className="font-medium">{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="space-y-3 text-sm">
+                  <div className="flex gap-3"><BadgeCheck className="h-5 w-5 text-emerald-600 shrink-0" /><div><div className="font-medium">100% genuine</div><div className="text-muted-foreground text-xs">Verified premium account</div></div></div>
+                  <div className="flex gap-3"><RefreshCw className="h-5 w-5 text-emerald-600 shrink-0" /><div><div className="font-medium">Free replacement</div><div className="text-muted-foreground text-xs">If it stops working during duration</div></div></div>
+                  <div className="flex gap-3"><ShieldCheck className="h-5 w-5 text-emerald-600 shrink-0" /><div><div className="font-medium">Secure checkout</div><div className="text-muted-foreground text-xs">Your data stays private</div></div></div>
+                </div>
+              )}
             </div>
           </aside>
         </div>
