@@ -84,6 +84,11 @@ function ProductDetail() {
   const priceLabel = formatPrice(Number(p.price));
   const compareAt = Number(p.price) * 1.25;
   const duration = p.subscription_duration ?? "subscription";
+  // Admin-authored warranty text (one point per line); falls back to defaults when empty.
+  const warrantyPoints: string[] = String((p as { warranty?: string | null }).warranty ?? "")
+    .split("\n")
+    .map((l) => l.replace(/^[-•*]\s*/, "").trim())
+    .filter(Boolean);
 
   const buy = async () => {
     if (!user) return navigate({ to: "/login" });
