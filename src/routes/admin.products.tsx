@@ -70,6 +70,7 @@ function AdminProducts() {
       category_id: (fd.get("category_id") as string) || null,
       price: Number(fd.get("price")),
       subscription_duration: fd.get("subscription_duration") as string,
+      warranty: ((fd.get("warranty") as string) || "").trim() || null,
       featured: fd.get("featured") === "on",
       status: "active",
     };
@@ -96,6 +97,16 @@ function AdminProducts() {
             <form onSubmit={save} className="space-y-3">
               <div className="space-y-1.5"><Label>Title</Label><Input name="title" required defaultValue={edit?.title ?? ""} /></div>
               <div className="space-y-1.5"><Label>Description</Label><Textarea name="description" defaultValue={edit?.description ?? ""} /></div>
+              <div className="space-y-1.5">
+                <Label>Warranty details</Label>
+                <Textarea
+                  name="warranty"
+                  rows={3}
+                  placeholder={"e.g.\n100% genuine verified account\nFree replacement during subscription\n7-day support guarantee"}
+                  defaultValue={edit?.warranty ?? ""}
+                />
+                <p className="text-xs text-muted-foreground">One point per line. Shown in the product page Warranty box.</p>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5"><Label>Price</Label><Input name="price" type="number" step="0.01" required defaultValue={edit?.price ?? ""} /></div>
                 <div className="space-y-1.5"><Label>Duration</Label><Input name="subscription_duration" defaultValue={edit?.subscription_duration ?? "1 month"} /></div>
