@@ -292,6 +292,7 @@ export type Database = {
           stock_status: string
           subscription_duration: string | null
           title: string
+          warranty: string | null
         }
         Insert: {
           category_id?: string | null
@@ -305,6 +306,7 @@ export type Database = {
           stock_status?: string
           subscription_duration?: string | null
           title: string
+          warranty?: string | null
         }
         Update: {
           category_id?: string | null
@@ -318,6 +320,7 @@ export type Database = {
           stock_status?: string
           subscription_duration?: string | null
           title?: string
+          warranty?: string | null
         }
         Relationships: [
           {
