@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import esewaQrUrl from "@/assets/esewa-qr.jpeg";
 import { ESEWA_ACCOUNT_ID, ESEWA_ACCOUNT_NAME } from "@/lib/site-config";
 import { setCartItemQuantity } from "@/lib/cart";
-import { cartQuery, plansQuery } from "@/lib/checkout-queries";
+import { cartQuery, plansQuery, ordersQuery } from "@/lib/checkout-queries";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({ meta: [{ title: "Cart — NextGen E-Learning" }] }),
@@ -71,6 +71,12 @@ function CartPage() {
     setPlacing(true);
     try {
       const result = await placeOrderFn({ data: { paymentMethod, paymentReference } });
+      // Refresh cart (now emptied), plan/pricing data and order history instantly.
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: cartQuery.queryKey }),
+        qc.invalidateQueries({ queryKey: plansQuery.queryKey }),
+        qc.invalidateQueries({ queryKey: ordersQuery.queryKey }),
+      ]);
       toast.success("Order placed. Upload your payment screenshot in chat.");
       nav({ to: "/dashboard/chat", search: { order: result.orderId } as any });
     } catch (e: any) {

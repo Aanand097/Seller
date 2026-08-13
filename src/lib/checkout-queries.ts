@@ -76,3 +76,39 @@ export const plansQuery = queryOptions({
   retry: 2,
   refetchOnWindowFocus: false,
 });
+
+export type OrderRow = {
+  id: string;
+  created_at: string;
+  total_price: number;
+  payment_status: string;
+  delivery_status: string;
+  payment_method: string | null;
+  account_details: string | null;
+  order_items: { quantity: number; price: number; products: { title: string } | null }[];
+};
+
+/**
+ * Order history for the signed-in user. Shared so checkout can invalidate it
+ * the moment an order is placed / payment succeeds.
+ */
+export const ordersQuery = queryOptions({
+  queryKey: ["orders", "mine"],
+  queryFn: async (): Promise<OrderRow[]> => {
+    const { data: auth } = await supabase.auth.getUser();
+    const uid = auth.user?.id;
+    if (!uid) return [];
+    const data = await withRetry(() =>
+      supabase
+        .from("orders")
+        .select("*, order_items(*, products(title))")
+        .eq("user_id", uid)
+        .order("created_at", { ascending: false }),
+    );
+    return (data as OrderRow[]) ?? [];
+  },
+  staleTime: 10_000,
+  gcTime: 10 * 60_000,
+  retry: 2,
+  refetchOnWindowFocus: false,
+});
