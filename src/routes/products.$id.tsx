@@ -181,25 +181,25 @@ function ProductDetail() {
               <div className="text-xs text-muted-foreground mt-1">per {duration} · price includes taxes</div>
             </div>
 
-            {/* Duration option */}
-            <div className="mt-5">
-              <div className="text-sm font-medium mb-2">Plan</div>
-              <button className="rounded-xl border-2 border-primary bg-primary/5 px-4 py-3 text-left">
-                <div className="text-sm font-semibold">{duration}</div>
-                <div className="text-xs text-muted-foreground">Full access · Instant delivery</div>
-              </button>
-            </div>
-
-            {/* Quantity + actions */}
-            <div className="mt-5">
-              <div className="text-sm font-medium mb-2">Quantity</div>
-              <div className="flex items-center gap-3">
-                <div className="inline-flex items-center border rounded-lg overflow-hidden">
-                  <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="h-10 w-10 hover:bg-muted">−</button>
-                  <div className="w-12 text-center font-medium">{qty}</div>
-                  <button onClick={() => setQty((q) => Math.min(10, q + 1))} className="h-10 w-10 hover:bg-muted">+</button>
+            {/* Plan & quantity selection (size) — card mirrors the Warranty box so the two columns align */}
+            <div className="mt-5 rounded-2xl border bg-card p-5 space-y-5">
+              <div>
+                <div className="text-sm font-medium mb-2">Plan</div>
+                <button className="w-full rounded-xl border-2 border-primary bg-primary/5 px-4 py-3 text-left">
+                  <div className="text-sm font-semibold">{duration}</div>
+                  <div className="text-xs text-muted-foreground">Full access · Instant delivery</div>
+                </button>
+              </div>
+              <div>
+                <div className="text-sm font-medium mb-2">Quantity</div>
+                <div className="flex items-center gap-3">
+                  <div className="inline-flex items-center border rounded-lg overflow-hidden">
+                    <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="h-10 w-10 hover:bg-muted">−</button>
+                    <div className="w-12 text-center font-medium">{qty}</div>
+                    <button onClick={() => setQty((q) => Math.min(10, q + 1))} className="h-10 w-10 hover:bg-muted">+</button>
+                  </div>
+                  <span className="text-sm text-muted-foreground">Max 10 per order</span>
                 </div>
-                <span className="text-sm text-muted-foreground">Max 10 per order</span>
               </div>
             </div>
 
@@ -225,8 +225,8 @@ function ProductDetail() {
           </div>
 
           {/* Sidebar */}
-          <aside className="space-y-4">
-            <div className="rounded-2xl border bg-card p-5">
+          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <div className="rounded-2xl border bg-card p-5 order-2 lg:order-1">
               <div className="font-semibold mb-3">Delivery & Support</div>
               <div className="space-y-3 text-sm">
                 <div className="flex gap-3"><Truck className="h-5 w-5 text-primary shrink-0" /><div><div className="font-medium">Instant Digital Delivery</div><div className="text-muted-foreground text-xs">Access within 15 minutes of payment</div></div></div>
@@ -234,7 +234,7 @@ function ProductDetail() {
                 <div className="flex gap-3"><Headphones className="h-5 w-5 text-primary shrink-0" /><div><div className="font-medium">24/7 Support</div><div className="text-muted-foreground text-xs">WhatsApp & in-app chat</div></div></div>
               </div>
             </div>
-            <div className="rounded-2xl border bg-card p-5">
+            <div className="rounded-2xl border bg-card p-5 order-1 lg:order-2">
               <div className="font-semibold mb-3">Warranty</div>
               {warrantyPoints.length > 0 ? (
                 <ul className="space-y-3 text-sm">
