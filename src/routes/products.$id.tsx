@@ -225,7 +225,7 @@ function ProductDetail() {
           </div>
 
           {/* Sidebar */}
-          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
             <div className="rounded-2xl border bg-card p-5 order-2 lg:order-1">
               <div className="font-semibold mb-3">Delivery & Support</div>
               <div className="space-y-3 text-sm">
