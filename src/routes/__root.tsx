@@ -11,6 +11,7 @@ import {
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
+import { hydrateCatalogCache, persistCatalogCache } from "@/lib/query-persist";
 
 function NotFoundComponent() {
   return (
@@ -117,6 +118,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  // Render catalog data from the previous visit instantly, then revalidate.
+  hydrateCatalogCache(queryClient);
+  useEffect(() => persistCatalogCache(queryClient), [queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
