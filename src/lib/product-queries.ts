@@ -20,11 +20,14 @@ const SHARED = {
   refetchOnReconnect: false,
 } as const;
 
+// Explicit column list keeps the payload small (no unused blobs over the wire).
+const LIST_COLS = "id,title,description,image_url,price,subscription_duration,featured,category_id,categories(id,name)";
+
 export const productsQuery = queryOptions({
   queryKey: ["products", "active"],
   queryFn: async () => {
     const data = await withRetry(() =>
-      supabase.from("products").select("*, categories(id,name)").eq("status", "active"),
+      supabase.from("products").select(LIST_COLS).eq("status", "active").order("featured", { ascending: false }),
     );
     return (data as ProductRow[]) ?? [];
   },
@@ -60,7 +63,7 @@ export const relatedQuery = (categoryId: string | null, excludeId: string) =>
     queryFn: async () => {
       let q = supabase
         .from("products")
-        .select("*, categories(id,name)")
+        .select(LIST_COLS)
         .eq("status", "active")
         .neq("id", excludeId)
         .limit(4);
