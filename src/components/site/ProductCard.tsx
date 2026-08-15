@@ -55,7 +55,7 @@ export function ProductCard({ product, index = 0 }: { product: ProductRow; index
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.4, delay: index * 0.05 }}
+      transition={{ duration: 0.25, delay: Math.min(index, 4) * 0.03 }}
       className="group"
     >
       <div
@@ -76,7 +76,7 @@ export function ProductCard({ product, index = 0 }: { product: ProductRow; index
         <div className="h-full rounded-2xl border bg-card overflow-hidden hover-lift relative">
           <div className="aspect-[16/10] relative overflow-hidden bg-gradient-to-br from-accent to-white">
             {product.image_url ? (
-              <img src={product.image_url} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <img src={product.image_url} alt={product.title} width={640} height={400} loading={index < 3 ? "eager" : "lazy"} decoding="async" fetchPriority={index < 3 ? "high" : "auto"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
             ) : (
               <div className="absolute inset-0 grid place-items-center">
                 <div className="h-20 w-20 rounded-2xl grid place-items-center text-white" style={{ background: "var(--gradient-primary)" }}>
