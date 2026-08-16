@@ -7,7 +7,7 @@ import { Sparkles, Zap, Shield, MessageSquare, ArrowRight, Star, Check } from "l
 import { PublicLayout } from "@/components/site/PublicLayout";
 import { ProductCard, type ProductRow } from "@/components/site/ProductCard";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ProductGridSkeleton, CategoryTilesSkeleton } from "@/components/site/Skeletons";
 import { productsQuery, categoriesQuery } from "@/lib/product-queries";
 
 export const Route = createFileRoute("/")({
@@ -33,7 +33,7 @@ function Index() {
     ...productsQuery,
     select: (rows: ProductRow[]) => rows.filter((p) => p.featured).slice(0, 6),
   });
-  const { data: categories = [] } = useQuery(categoriesQuery);
+  const { data: categories = [], isPending: catsPending } = useQuery(categoriesQuery);
   const products: ProductRow[] | null = isPending ? null : (all ?? []);
 
   useEffect(() => {
@@ -90,7 +90,7 @@ function Index() {
           <Link to="/products" className="text-sm font-semibold text-primary hidden sm:inline-flex items-center gap-1">View all <ArrowRight className="h-4 w-4" /></Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          {categories.map((c, i) => (
+          {catsPending && categories.length === 0 ? <CategoryTilesSkeleton count={6} /> : categories.map((c, i) => (
             <motion.div key={c.id} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}>
               <Link to="/products" search={{ category: c.id } as any} className="block rounded-2xl border bg-card p-5 hover-lift text-center">
                 <div className="h-12 w-12 mx-auto rounded-xl grid place-items-center text-white mb-3" style={{ background: "var(--gradient-primary)" }}>
@@ -113,7 +113,7 @@ function Index() {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {products === null
-            ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-80 rounded-2xl" />)
+            ? <ProductGridSkeleton count={6} />
             : products.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
         </div>
       </section>

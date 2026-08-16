@@ -9,7 +9,7 @@ import {
 import { PublicLayout } from "@/components/site/PublicLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ProductDetailSkeleton } from "@/components/site/Skeletons";
 import { ProductCard, type ProductRow } from "@/components/site/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/format";
@@ -34,13 +34,7 @@ export const Route = createFileRoute("/products/$id")({
   }),
   pendingComponent: () => (
     <PublicLayout>
-      <section className="container mx-auto max-w-7xl px-4 py-8">
-        <div className="grid lg:grid-cols-[1fr_1fr_320px] gap-6">
-          <Skeleton className="aspect-square rounded-2xl" />
-          <div className="space-y-4"><Skeleton className="h-8" /><Skeleton className="h-6" /><Skeleton className="h-24" /></div>
-          <Skeleton className="h-64 rounded-2xl" />
-        </div>
-      </section>
+      <ProductDetailSkeleton />
     </PublicLayout>
   ),
   errorComponent: ({ error }) => (

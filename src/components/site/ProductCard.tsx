@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { ArrowRight, ShoppingCart, MessageCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,7 @@ export function ProductCard({ product, index = 0 }: { product: ProductRow; index
   const { user } = useAuth();
   const navigate = useNavigate();
   const router = useRouter();
+  const [imgLoaded, setImgLoaded] = useState(false);
   const warm = () => {
     void router.preloadRoute({ to: "/products/$id", params: { id: product.id } });
   };
@@ -76,7 +78,21 @@ export function ProductCard({ product, index = 0 }: { product: ProductRow; index
         <div className="h-full rounded-2xl border bg-card overflow-hidden hover-lift relative">
           <div className="aspect-[16/10] relative overflow-hidden bg-gradient-to-br from-accent to-white">
             {product.image_url ? (
-              <img src={product.image_url} alt={product.title} width={640} height={400} loading={index < 3 ? "eager" : "lazy"} decoding="async" fetchPriority={index < 3 ? "high" : "auto"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <>
+                {!imgLoaded && <div className="absolute inset-0 animate-pulse bg-primary/10" />}
+                <img
+                  src={product.image_url}
+                  alt={product.title}
+                  width={640}
+                  height={400}
+                  loading={index < 3 ? "eager" : "lazy"}
+                  decoding="async"
+                  fetchPriority={index < 3 ? "high" : "auto"}
+                  onLoad={() => setImgLoaded(true)}
+                  onError={() => setImgLoaded(true)}
+                  className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+                />
+              </>
             ) : (
               <div className="absolute inset-0 grid place-items-center">
                 <div className="h-20 w-20 rounded-2xl grid place-items-center text-white" style={{ background: "var(--gradient-primary)" }}>

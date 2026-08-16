@@ -6,7 +6,7 @@ import { PublicLayout } from "@/components/site/PublicLayout";
 import { ProductCard, type ProductRow } from "@/components/site/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ProductGridSkeleton } from "@/components/site/Skeletons";
 import { productsQuery, categoriesQuery } from "@/lib/product-queries";
 
 export const Route = createFileRoute("/products/")({
@@ -78,7 +78,7 @@ function ProductsPage() {
               </div>
             )
             : filtered === null
-            ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-80 rounded-2xl" />)
+            ? <ProductGridSkeleton count={6} />
             : filtered.length === 0
               ? <div className="col-span-full text-center py-20 text-muted-foreground">No products found.</div>
               : filtered.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
