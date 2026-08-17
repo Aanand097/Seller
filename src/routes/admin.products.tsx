@@ -92,27 +92,28 @@ function AdminProducts() {
         <h1 className="font-display text-3xl font-bold">Products</h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button onClick={() => setEdit(null)} className="text-white" style={{ background: "var(--gradient-primary)" }}><Plus className="h-4 w-4 mr-1" />Add product</Button></DialogTrigger>
-          <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-            <DialogHeader><DialogTitle>{edit ? "Edit" : "New"} product</DialogTitle></DialogHeader>
-            <form onSubmit={save} className="space-y-3">
-              <div className="space-y-1.5"><Label>Title</Label><Input name="title" required defaultValue={edit?.title ?? ""} /></div>
-              <div className="space-y-1.5"><Label>Description</Label><Textarea name="description" defaultValue={edit?.description ?? ""} /></div>
-              <div className="space-y-1.5">
-                <Label>Warranty details</Label>
+          <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-lg max-h-[88vh] overflow-y-auto p-3 sm:p-4">
+            <DialogHeader className="pb-1"><DialogTitle className="text-lg">{edit ? "Edit" : "New"} product</DialogTitle></DialogHeader>
+            <form onSubmit={save} className="space-y-2.5">
+              <div className="space-y-1"><Label className="text-xs">Title</Label><Input name="title" required defaultValue={edit?.title ?? ""} /></div>
+              <div className="space-y-1"><Label className="text-xs">Description</Label><Textarea name="description" rows={2} defaultValue={edit?.description ?? ""} /></div>
+              <div className="space-y-1">
+                <Label className="text-xs">Warranty details</Label>
                 <Textarea
                   name="warranty"
-                  rows={3}
+                  rows={2}
                   placeholder={"e.g.\n100% genuine verified account\nFree replacement during subscription\n7-day support guarantee"}
                   defaultValue={edit?.warranty ?? ""}
+                  className="text-sm"
                 />
-                <p className="text-xs text-muted-foreground">One point per line. Shown in the product page Warranty box.</p>
+                <p className="text-[11px] text-muted-foreground">One point per line. Shown in the product page Warranty box.</p>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5"><Label>Price</Label><Input name="price" type="number" step="0.01" required defaultValue={edit?.price ?? ""} /></div>
-                <div className="space-y-1.5"><Label>Duration</Label><Input name="subscription_duration" defaultValue={edit?.subscription_duration ?? "1 month"} /></div>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="space-y-1"><Label className="text-xs">Price</Label><Input name="price" type="number" step="0.01" required defaultValue={edit?.price ?? ""} /></div>
+                <div className="space-y-1"><Label className="text-xs">Duration</Label><Input name="subscription_duration" defaultValue={edit?.subscription_duration ?? "1 month"} /></div>
               </div>
-              <div className="space-y-1.5">
-                <Label>Product image</Label>
+              <div className="space-y-1">
+                <Label className="text-xs">Product image</Label>
                 <input
                   ref={fileRef}
                   type="file"
@@ -122,7 +123,7 @@ function AdminProducts() {
                 />
                 {imageUrl ? (
                   <div className="relative rounded-lg border overflow-hidden bg-accent/40">
-                    <img src={imageUrl} alt="Preview" className="w-full h-40 object-cover" />
+                    <img src={imageUrl} alt="Preview" className="w-full h-28 object-cover" />
                     <div className="absolute top-2 right-2 flex gap-2">
                       <Button type="button" size="sm" variant="secondary" onClick={() => fileRef.current?.click()} disabled={uploading}>
                         <Upload className="h-4 w-4 mr-1" />Replace
@@ -137,7 +138,7 @@ function AdminProducts() {
                     type="button"
                     onClick={() => fileRef.current?.click()}
                     disabled={uploading}
-                    className="w-full h-32 rounded-lg border-2 border-dashed border-border hover:border-primary/60 transition flex flex-col items-center justify-center gap-1 text-sm text-muted-foreground"
+                    className="w-full h-24 rounded-lg border-2 border-dashed border-border hover:border-primary/60 transition flex flex-col items-center justify-center gap-0.5 text-sm text-muted-foreground"
                   >
                     <Upload className="h-5 w-5" />
                     {uploading ? "Uploading..." : "Click to upload from device"}
@@ -145,14 +146,14 @@ function AdminProducts() {
                   </button>
                 )}
               </div>
-              <div className="space-y-1.5"><Label>Category</Label>
-                <select name="category_id" defaultValue={edit?.category_id ?? ""} className="w-full h-10 rounded-md border bg-background px-3 text-sm">
+              <div className="space-y-1"><Label className="text-xs">Category</Label>
+                <select name="category_id" defaultValue={edit?.category_id ?? ""} className="w-full h-9 rounded-md border bg-background px-3 text-sm">
                   <option value="">—</option>
                   {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="featured" defaultChecked={edit?.featured} /> Featured</label>
-              <Button type="submit" disabled={saving || uploading} className="w-full text-white" style={{ background: "var(--gradient-primary)" }}>
+              <label className="flex items-center gap-2 text-sm pt-0.5"><input type="checkbox" name="featured" defaultChecked={edit?.featured} /> Featured</label>
+              <Button type="submit" disabled={saving || uploading} className="w-full text-white mt-1" style={{ background: "var(--gradient-primary)" }}>
                 {saving ? "Saving..." : "Save"}
               </Button>
             </form>
