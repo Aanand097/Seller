@@ -95,8 +95,8 @@ function AdminProducts() {
           <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-lg max-h-[88vh] overflow-y-auto p-3 sm:p-4">
             <DialogHeader className="pb-1"><DialogTitle className="text-lg">{edit ? "Edit" : "New"} product</DialogTitle></DialogHeader>
             <form onSubmit={save} className="space-y-2.5">
-              <div className="space-y-1.5"><Label>Title</Label><Input name="title" required defaultValue={edit?.title ?? ""} /></div>
-              <div className="space-y-1.5"><Label>Description</Label><Textarea name="description" defaultValue={edit?.description ?? ""} /></div>
+              <div className="space-y-1"><Label className="text-xs">Title</Label><Input name="title" required defaultValue={edit?.title ?? ""} /></div>
+              <div className="space-y-1"><Label className="text-xs">Description</Label><Textarea name="description" rows={2} defaultValue={edit?.description ?? ""} /></div>
               <div className="space-y-1.5">
                 <Label>Warranty details</Label>
                 <Textarea
