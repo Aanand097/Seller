@@ -152,8 +152,8 @@ function AdminProducts() {
                   {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="featured" defaultChecked={edit?.featured} /> Featured</label>
-              <Button type="submit" disabled={saving || uploading} className="w-full text-white" style={{ background: "var(--gradient-primary)" }}>
+              <label className="flex items-center gap-2 text-sm pt-0.5"><input type="checkbox" name="featured" defaultChecked={edit?.featured} /> Featured</label>
+              <Button type="submit" disabled={saving || uploading} className="w-full text-white mt-1" style={{ background: "var(--gradient-primary)" }}>
                 {saving ? "Saving..." : "Save"}
               </Button>
             </form>
