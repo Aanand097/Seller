@@ -138,7 +138,7 @@ function AdminProducts() {
                     type="button"
                     onClick={() => fileRef.current?.click()}
                     disabled={uploading}
-                    className="w-full h-32 rounded-lg border-2 border-dashed border-border hover:border-primary/60 transition flex flex-col items-center justify-center gap-1 text-sm text-muted-foreground"
+                    className="w-full h-24 rounded-lg border-2 border-dashed border-border hover:border-primary/60 transition flex flex-col items-center justify-center gap-0.5 text-sm text-muted-foreground"
                   >
                     <Upload className="h-5 w-5" />
                     {uploading ? "Uploading..." : "Click to upload from device"}
