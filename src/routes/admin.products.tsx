@@ -92,9 +92,9 @@ function AdminProducts() {
         <h1 className="font-display text-3xl font-bold">Products</h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild><Button onClick={() => setEdit(null)} className="text-white" style={{ background: "var(--gradient-primary)" }}><Plus className="h-4 w-4 mr-1" />Add product</Button></DialogTrigger>
-          <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-            <DialogHeader><DialogTitle>{edit ? "Edit" : "New"} product</DialogTitle></DialogHeader>
-            <form onSubmit={save} className="space-y-3">
+          <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-lg max-h-[88vh] overflow-y-auto p-3 sm:p-4">
+            <DialogHeader className="pb-1"><DialogTitle className="text-lg">{edit ? "Edit" : "New"} product</DialogTitle></DialogHeader>
+            <form onSubmit={save} className="space-y-2.5">
               <div className="space-y-1.5"><Label>Title</Label><Input name="title" required defaultValue={edit?.title ?? ""} /></div>
               <div className="space-y-1.5"><Label>Description</Label><Textarea name="description" defaultValue={edit?.description ?? ""} /></div>
               <div className="space-y-1.5">
