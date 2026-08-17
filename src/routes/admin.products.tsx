@@ -123,7 +123,7 @@ function AdminProducts() {
                 />
                 {imageUrl ? (
                   <div className="relative rounded-lg border overflow-hidden bg-accent/40">
-                    <img src={imageUrl} alt="Preview" className="w-full h-40 object-cover" />
+                    <img src={imageUrl} alt="Preview" className="w-full h-28 object-cover" />
                     <div className="absolute top-2 right-2 flex gap-2">
                       <Button type="button" size="sm" variant="secondary" onClick={() => fileRef.current?.click()} disabled={uploading}>
                         <Upload className="h-4 w-4 mr-1" />Replace
