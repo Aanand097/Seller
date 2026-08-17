@@ -97,22 +97,23 @@ function AdminProducts() {
             <form onSubmit={save} className="space-y-2.5">
               <div className="space-y-1"><Label className="text-xs">Title</Label><Input name="title" required defaultValue={edit?.title ?? ""} /></div>
               <div className="space-y-1"><Label className="text-xs">Description</Label><Textarea name="description" rows={2} defaultValue={edit?.description ?? ""} /></div>
-              <div className="space-y-1.5">
-                <Label>Warranty details</Label>
+              <div className="space-y-1">
+                <Label className="text-xs">Warranty details</Label>
                 <Textarea
                   name="warranty"
-                  rows={3}
+                  rows={2}
                   placeholder={"e.g.\n100% genuine verified account\nFree replacement during subscription\n7-day support guarantee"}
                   defaultValue={edit?.warranty ?? ""}
+                  className="text-sm"
                 />
-                <p className="text-xs text-muted-foreground">One point per line. Shown in the product page Warranty box.</p>
+                <p className="text-[11px] text-muted-foreground">One point per line. Shown in the product page Warranty box.</p>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5"><Label>Price</Label><Input name="price" type="number" step="0.01" required defaultValue={edit?.price ?? ""} /></div>
-                <div className="space-y-1.5"><Label>Duration</Label><Input name="subscription_duration" defaultValue={edit?.subscription_duration ?? "1 month"} /></div>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="space-y-1"><Label className="text-xs">Price</Label><Input name="price" type="number" step="0.01" required defaultValue={edit?.price ?? ""} /></div>
+                <div className="space-y-1"><Label className="text-xs">Duration</Label><Input name="subscription_duration" defaultValue={edit?.subscription_duration ?? "1 month"} /></div>
               </div>
-              <div className="space-y-1.5">
-                <Label>Product image</Label>
+              <div className="space-y-1">
+                <Label className="text-xs">Product image</Label>
                 <input
                   ref={fileRef}
                   type="file"
