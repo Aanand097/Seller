@@ -146,8 +146,8 @@ function AdminProducts() {
                   </button>
                 )}
               </div>
-              <div className="space-y-1.5"><Label>Category</Label>
-                <select name="category_id" defaultValue={edit?.category_id ?? ""} className="w-full h-10 rounded-md border bg-background px-3 text-sm">
+              <div className="space-y-1"><Label className="text-xs">Category</Label>
+                <select name="category_id" defaultValue={edit?.category_id ?? ""} className="w-full h-9 rounded-md border bg-background px-3 text-sm">
                   <option value="">—</option>
                   {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
