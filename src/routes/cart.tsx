@@ -17,6 +17,7 @@ import esewaQrUrl from "@/assets/esewa-qr.jpeg";
 import { ESEWA_ACCOUNT_ID, ESEWA_ACCOUNT_NAME } from "@/lib/site-config";
 import { setCartItemQuantity } from "@/lib/cart";
 import { cartQuery, plansQuery, ordersQuery } from "@/lib/checkout-queries";
+import { settingsQuery, catalogPlansQuery } from "@/lib/settings-queries";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({ meta: [{ title: "Cart — NextGen E-Learning" }] }),
@@ -24,6 +25,8 @@ export const Route = createFileRoute("/cart")({
     // Prime cart lines, pricing and plan/terms data so checkout renders instantly.
     void context.queryClient.prefetchQuery(cartQuery);
     void context.queryClient.prefetchQuery(plansQuery);
+    void context.queryClient.prefetchQuery(settingsQuery);
+    void context.queryClient.prefetchQuery(catalogPlansQuery);
   },
   component: CartPage,
 });
@@ -34,6 +37,8 @@ function CartPage() {
   const qc = useQueryClient();
   const { data: items = null } = useQuery({ ...cartQuery, enabled: !loading });
   const { data: plans = [] } = useQuery(plansQuery);
+  const { data: settings } = useQuery(settingsQuery);
+  const { data: catalogPlans = [] } = useQuery(catalogPlansQuery);
   const [placing, setPlacing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"esewa" | "manual">("esewa");
   const [paymentReference, setPaymentReference] = useState("");
@@ -88,7 +93,12 @@ function CartPage() {
 
   if (!loading && !user) return <PublicLayout><div className="container mx-auto max-w-md px-4 py-20 text-center"><h1 className="text-2xl font-bold">Sign in to view your cart</h1><Button asChild className="mt-6"><Link to="/login">Sign in</Link></Button></div></PublicLayout>;
 
-  const total = (items ?? []).reduce((s, i) => s + Number(i.products.price) * i.quantity, 0);
+  const subtotal = (items ?? []).reduce((s, i) => s + Number(i.products.price) * i.quantity, 0);
+  const taxPercent = Number(settings?.tax_percent ?? 0);
+  const tax = Math.round(subtotal * (taxPercent / 100) * 100) / 100;
+  const total = subtotal + tax;
+  const esewaName = settings?.esewa_account_name || ESEWA_ACCOUNT_NAME;
+  const esewaId = settings?.esewa_account_id || ESEWA_ACCOUNT_ID;
 
   return (
     <PublicLayout>
@@ -144,8 +154,8 @@ function CartPage() {
                     <div className="flex items-center gap-2 font-bold mb-3"><QrCode className="h-4 w-4" /> Scan eSewa QR to pay</div>
                     <img src={esewaQrUrl} alt="eSewa payment QR for NextGen E-Learning" className="mx-auto w-full max-w-[260px] rounded-lg border bg-white object-contain" />
                     <div className="mt-3 grid gap-1 text-center">
-                      <p className="font-semibold">{ESEWA_ACCOUNT_NAME}</p>
-                      <p className="text-muted-foreground">eSewa ID: {ESEWA_ACCOUNT_ID}</p>
+                      <p className="font-semibold">{esewaName}</p>
+                      <p className="text-muted-foreground">eSewa ID: {esewaId}</p>
                       <p className="font-bold text-base">Pay total: {formatPrice(total)}</p>
                     </div>
                     <div className="mt-3 flex justify-center">
@@ -161,9 +171,19 @@ function CartPage() {
                     <Input id="reference" placeholder="eSewa reference ID if available" value={paymentReference} onChange={(e) => setPaymentReference(e.target.value)} />
                     <p className="text-xs text-muted-foreground">After checkout, chat will open so you can upload the payment screenshot for admin verification.</p>
                   </div>
-                  {plans.length > 0 && (
+                  {(catalogPlans.length > 0 || plans.length > 0) && (
                     <div className="rounded-xl border bg-background p-4 text-sm">
                       <div className="font-bold mb-2">Subscription plans & terms</div>
+                      {catalogPlans.length > 0 ? (
+                        <ul className="grid gap-1">
+                          {catalogPlans.map((p) => (
+                            <li key={p.id} className="flex justify-between gap-3">
+                              <span className="text-muted-foreground">{p.name} · {p.duration}</span>
+                              <span className="font-semibold">{formatPrice(Number(p.price))}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
                       <ul className="grid gap-1">
                         {plans.map((p) => (
                           <li key={p.duration} className="flex justify-between gap-3">
@@ -174,7 +194,9 @@ function CartPage() {
                           </li>
                         ))}
                       </ul>
-                      <p className="mt-2 text-xs text-muted-foreground">Prices are inclusive of tax. Accounts are delivered after admin verifies your payment.</p>
+                      )}
+                      {settings?.support_note && <p className="mt-2 text-xs text-muted-foreground">{settings.support_note}</p>}
+                      <p className="mt-2 text-xs text-muted-foreground">Accounts are delivered after admin verifies your payment.</p>
                     </div>
                   )}
                 </div>
@@ -183,8 +205,8 @@ function CartPage() {
 
             <div className="rounded-2xl glass p-6 h-fit sticky top-24">
               <h3 className="font-display font-bold text-lg mb-4">Summary</h3>
-              <div className="flex justify-between mb-2"><span>Subtotal</span><span>{formatPrice(total)}</span></div>
-              <div className="flex justify-between mb-4 text-sm text-muted-foreground"><span>Tax</span><span>Included</span></div>
+              <div className="flex justify-between mb-2"><span>Subtotal</span><span>{formatPrice(subtotal)}</span></div>
+              <div className="flex justify-between mb-4 text-sm text-muted-foreground"><span>Tax{taxPercent > 0 ? ` (${taxPercent}%)` : ""}</span><span>{taxPercent > 0 ? formatPrice(tax) : "Included"}</span></div>
               <div className="flex justify-between font-bold text-lg pt-4 border-t"><span>Total</span><span className="gradient-text">{formatPrice(total)}</span></div>
               <Button onClick={checkout} disabled={placing} size="lg" className="w-full mt-6 text-white" style={{ background: "var(--gradient-primary)" }}>{placing ? "Creating order..." : "I paid / Continue to proof upload"}</Button>
             </div>

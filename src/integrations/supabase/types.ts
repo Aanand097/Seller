@@ -279,6 +279,39 @@ export type Database = {
           },
         ]
       }
+      plans: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          duration: string
+          id: string
+          name: string
+          price: number
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          duration: string
+          id?: string
+          name: string
+          price?: number
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          duration?: string
+          id?: string
+          name?: string
+          price?: number
+          sort_order?: number
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category_id: string | null
@@ -408,6 +441,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      site_settings: {
+        Row: {
+          contact_email: string
+          esewa_account_id: string
+          esewa_account_name: string
+          id: boolean
+          site_name: string
+          support_note: string | null
+          tax_percent: number
+          updated_at: string
+          whatsapp_number: string
+        }
+        Insert: {
+          contact_email?: string
+          esewa_account_id?: string
+          esewa_account_name?: string
+          id?: boolean
+          site_name?: string
+          support_note?: string | null
+          tax_percent?: number
+          updated_at?: string
+          whatsapp_number?: string
+        }
+        Update: {
+          contact_email?: string
+          esewa_account_id?: string
+          esewa_account_name?: string
+          id?: boolean
+          site_name?: string
+          support_note?: string | null
+          tax_percent?: number
+          updated_at?: string
+          whatsapp_number?: string
+        }
+        Relationships: []
       }
       user_activities: {
         Row: {
