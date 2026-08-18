@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { LayoutDashboard, Users, Package, ShoppingBag, MessageCircle, FolderTree } from "lucide-react";
+import { LayoutDashboard, Users, Package, ShoppingBag, MessageCircle, FolderTree, Layers, Settings } from "lucide-react";
 import { PublicLayout } from "@/components/site/PublicLayout";
 import { useAuth } from "@/lib/auth-context";
 
@@ -10,8 +10,10 @@ const ITEMS = [
   { to: "/admin", label: "Overview", Icon: LayoutDashboard },
   { to: "/admin/products", label: "Products", Icon: Package },
   { to: "/admin/categories", label: "Categories", Icon: FolderTree },
+  { to: "/admin/plans", label: "Plans", Icon: Layers },
   { to: "/admin/orders", label: "Orders", Icon: ShoppingBag },
   { to: "/admin/users", label: "Users", Icon: Users },
+  { to: "/admin/settings", label: "Settings", Icon: Settings },
   { to: "/dashboard/chat", label: "Chat", Icon: MessageCircle },
 ];
 
