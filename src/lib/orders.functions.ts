@@ -27,7 +27,16 @@ export const placeOrder = createServerFn({ method: "POST" })
         throw new Error(`A product in your cart is no longer available.`);
       }
     }
-    const total = rows.reduce((s, r) => s + Number(r.products!.price) * r.quantity, 0);
+    const subtotal = rows.reduce((s, r) => s + Number(r.products!.price) * r.quantity, 0);
+
+    // Tax percentage is admin-configurable in site settings.
+    const { data: settings } = await supabase
+      .from("site_settings" as never)
+      .select("tax_percent")
+      .limit(1)
+      .maybeSingle();
+    const taxPercent = Number((settings as { tax_percent?: number } | null)?.tax_percent ?? 0);
+    const total = Math.round(subtotal * (1 + taxPercent / 100) * 100) / 100;
 
     const { data: order, error: orderErr } = await supabase
       .from("orders")
